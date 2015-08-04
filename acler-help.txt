@@ -1,0 +1,38 @@
+Usage: ./acler.py [options]
+    use -h for help / option descriptions 
+    
+
+Options:
+  -h, --help            show this help message and exit
+  -i INFILE, --in-file=INFILE
+                        Non-extended Cisco ACL permit file to check traffic
+                        against. Example -i /home/username/my-acls.txt
+  -o OUTFILEDIR, --out-file-dir=OUTFILEDIR
+                        Directory where the output file should go. Defaults to
+                        home dir if not provided via CLI or env
+                        ACLER_OUTFILE_DIR. Example --out-file-dir=/somewhere
+                        /acl-stuff
+  -L LOGFILEDIR, --log-file-dir=LOGFILEDIR
+                        Directory where the rotating log files should go.
+                        Defaults to home dir if not provided via CLI or env
+                        ACLER_LOGFILE_DIR. Example -L /path/to/acler/logs
+  -T TMPFILEDIR, --tmp-file-dir=TMPFILEDIR
+                        Directory where the temp files should go. Defaults to
+                        home dir if not provided via CLI or env
+                        ACLER_TMPFILE_DIR. Example --tmp-file-
+                        dir=/fastdrive/home/username
+  -n, --no-del          Do not delete temp files
+  -s START, --start=START
+                        Rwfilter start-date (no hour). Example
+                        --start=2015/07/23. Defaults to last seven days.
+  -e END, --end=END     Rwfilter end-date (no hour). Example --end=2015/07/30.
+                        Defaults to last seven days.
+  -c SILKCLASS, --class=SILKCLASS
+                        Rwfilter class. Example --class=<classname>. Defaults
+                        to environment variable ACLER_SILK_CLASS if present.
+  -t SILKTYPES, --types=SILKTYPES
+                        Rwfilter types. Example --types=in,out,inweb,outweb.
+                        Defaults to environment variable ACLER_SILK_TYPES if
+                        present. Check your silk.conf file for available types
+                        (usually at /data/silk.conf).
+  -v, --verbose         Bumps log level from info to debug

@@ -1,0 +1,19 @@
+Line 1|No Traffic|access-list 105 permit tcp 3.0.0.0 0.255.255.255 eq 25 10.20.10.0 0.0.0.255
+Line 2|No Traffic|access-list 105 permit tcp host 3.3.3.12 host 10.10.10.22 eq 1433
+Line 3|No Traffic|access-list 105 permit udp host 3.3.3.12 host 10.10.10.22 eq 53
+Line 4|No Traffic|access-list 105 permit ahp host 3.3.3.12 host 10.10.10.22
+Line 5|No Traffic|access-list 105 permit esp host 3.3.3.12 host 10.10.10.22
+Line 6|No Traffic|access-list 105 permit tcp host 3.3.3.12 eq 1433 host 10.10.10.22
+Line 7|Not Assessed|access-list 105 permit tcp host 3.3.3.12 eq 1433 any|error list index out of range
+Line 8|No Traffic|access-list 105 permit tcp 5.5.33.0 0.0.0.255 eq 1433 host 10.10.10.22
+Line 9|No Traffic|access-list 105 permit tcp 5.5.33.0 0.0.0.255 eq 25 any eq 210
+Line 10|No Traffic|access-list 105 permit tcp any 10.40.0.0 0.0.255.255 eq 25
+Line 11|No Traffic|access-list 105 permit tcp host 5.5.5.15 range 21 22 10.50.0.0 0.0.255.255 range 21 22
+Line 12|Not Assessed|access-list 105 permit tcp 5.5.6.0/24 range 21 22 10.50.0.0 0.0.255.255 range 21 22|error Format issue, forward slash seen
+Line 13|Not Assessed|access-list 105 remark permit tcp any 10.10.0.0 0.0.255.255 eq 135 access-list 105 permit tcp any 10.10.0.0 0.0.255.255 eq 135|error Remark line
+Line 14|Not Assessed|access-list 105 Remark permit tcp any 10.20.0.0 0.0.255.255 eq 135 access-list 105 permit tcp any 10.20.0.0 0.0.255.255 eq 135|error Remark line
+Line 15|Not Assessed|access-list 105 REMARK permit tcp any 10.30.0.0 0.0.255.255 eq 135 access-list 105 permit tcp any 10.30.0.0 0.0.255.255 eq 135|error Remark line
+Line 16|Traffic in out|access-list 111 permit tcp any host 128.3.78.107 eq 25| in[FB=11161010 FP=21130 FR=1103 FB/FP=528] out[FB=224403 FP=2587 FR=405 RB=1427041 RP=21068 RR=1307 FB/FP=86 RB/RP=67]
+Line 17|Traffic in out|access-list 111 permit tcp host 57.166.108.94 host 128.3.48.103 eq 1044| in[FB=298489 FP=1197 FR=2 FB/FP=249] out[RB=339190 RP=1532 RR=2 RB/RP=221]
+Line 18|Traffic inweb outweb|access-list 111 permit tcp host 204.116.37.5 eq 80 host 128.3.48.186| inweb[FB=37664 FP=28 FR=1 FB/FP=1345] outweb[RB=1128 RP=21 RR=1 RB/RP=53]
+Line 19|Traffic in out|access-list 111 permit tcp host 216.140.85.137 host 128.3.48.26 eq 9848| in[FB=144 FP=3 FR=3 FB/FP=48] out[RB=120 RP=3 RR=3 RB/RP=40]
