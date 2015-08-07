@@ -8,6 +8,7 @@ from __future__ import print_function
 # and created limited custom acl parser due to time/policy limitations around
 # getting site-packages modules installed at customer location
 from acler.cisco_custom import parse_cisco
+from acler.elapsed_time import elapsed_time                                                                                                        
 from datetime import datetime, date, timedelta
 import logging, logging.handlers
 # not a best practice to import all, but what is called for by SEI docs
@@ -100,6 +101,9 @@ def build_rwfilter_working_file():
 
     global options
 
+    # get wall clock start time
+    t1 = time.time()
+
     rwfiltercommand = "rwfilter --start=%s --end=%s --anyset=%s --proto=1- \
     --class=%s --type=%s --pass=%s" % (options.start, options.end, setfile, \
     options.silkclass, options.silktypes, rwfile)
@@ -107,6 +111,12 @@ def build_rwfilter_working_file():
     logger.info("rwfilter command: %s" % rwfiltercommand)
 
     returncode = os.system(rwfiltercommand)
+
+    # get wall clock end time
+    t2 = time.time()
+    howlong = elapsed_time(int(t2 - t1))
+    logger.info("rwfilter took %s to run" % howlong)
+
     if returncode:
        logger.error("rwfilter return code not zero: %s" % returncode)
        sys.exit(returncode)
