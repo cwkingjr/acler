@@ -195,6 +195,14 @@ def build_file_names():
     # silk set file
     setfile = "%s/acler-%s.set" % (options.tmpfiledir, mytime)
 
+def aclers_assess_count():
+    """Return the count of assessible items in the aclers list"""
+
+    global aclers
+
+    mycount = len([x for x in aclers if x.assess])
+    return mycount
+
 
 def main():
 
@@ -205,10 +213,19 @@ def main():
     build_file_names()
     aclfile_to_aclers(options.infile)
     set_assess_flag()
-    get_initial_pull_silk_set()
-    build_rwfilter_working_file()
-    process_aclers_against_rwfile()
-    write_result_file()
+
+    # make sure there's something to work on
+    numentries = aclers_assess_count()
+    if numentries > 0:
+        logger.info("Found %d assessible ACL lines in %s" % (numentries, options.infile))
+        get_initial_pull_silk_set()
+        build_rwfilter_working_file()
+        process_aclers_against_rwfile()
+        write_result_file()
+    else:
+        logger.error("Found no assessible ACL lines in %s" % options.infile)
+        write_result_file()
+        sys.exit(1)
 
     if not options.nodeltmp:
         logger.info("Deleting the set and rw files")
@@ -302,7 +319,6 @@ def option_and_logging_setup():
     if os.environ.get('ACLER_DEV'):
         options.start = '2004/12/15'
         options.end   = '2005/01/30'
-        options.infile = 'example-acls.txt'
 
     if options.start:
         if not re.match('\d{4}/\d{2}/\d{2}', options.start):
@@ -342,8 +358,11 @@ def option_and_logging_setup():
 
     # IN FILE
     if not options.infile:
-        logger.error("-i / --in-file required.")
-        sys.exit(1)
+        if os.environ.get('ACLER_DEV'):
+            options.infile = 'example-acls.txt'
+        else:
+            logger.error("-i / --in-file required.")
+            sys.exit(1)
     if not os.path.exists(options.infile) and not os.path.isfile(options.infile):
         logger.error("in-file %s does not exist or is not a regular file" % options.infile)
         sys.exit(1)
