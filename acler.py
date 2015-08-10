@@ -284,12 +284,16 @@ def main():
     else:
         logger.error("Found no assessible ACL lines in %s" % options.infile)
         write_result_file()
-        sys.exit(1)
 
     if not options.nodeltmp:
-        logger.info("Deleting the set and rw files")
-        os.remove(setfile)
-        os.remove(rwfile)
+        if os.path.exists(setfile):
+            logger.info("Deleting the set file")
+            os.remove(setfile)
+        if os.path.exists(rwfile):
+            logger.info("Deleting the rw working file")
+            os.remove(rwfile)
+    else:
+        logger.info("Don't forget to prune your set/rw files manually")
 
 
 def option_and_logging_setup():
