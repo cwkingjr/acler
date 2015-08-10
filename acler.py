@@ -170,7 +170,7 @@ def write_result_file():
 
     global options
 
-    outfilename = "acler-%s.txt" % mytime
+    outfilename = "out-acler-%s.txt" % mytime
     outfile = "%s/%s" % (options.outfiledir, outfilename)
 
     with open(outfile, 'w') as f:
