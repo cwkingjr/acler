@@ -7,6 +7,9 @@ Options:
   -i INFILE, --in-file=INFILE
                         Non-extended Cisco ACL permit file to check traffic
                         against. Example -i /home/username/my-acls.txt
+  -I INFILECOLUMN, --in-file-column=INFILECOLUMN
+                        If the in file is a CSV, use this option to provide
+                        the one-based column that contains the ACL entry
   -o OUTFILEDIR, --out-file-dir=OUTFILEDIR
                         Directory where the output file should go. Defaults to
                         home dir if not provided via CLI or env
