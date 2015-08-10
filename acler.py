@@ -205,6 +205,7 @@ def build_file_names():
     # silk set file
     setfile = "%s/acler-%s.set" % (options.tmpfiledir, mytime)
 
+
 def aclers_assess_count():
     """Return the count of assessible items in the aclers list"""
 

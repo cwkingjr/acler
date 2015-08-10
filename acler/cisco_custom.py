@@ -25,6 +25,7 @@ class Endpoint(object):
         return "<Endpoint: has_netblock %s, has_port %s, netblock %s, port %s >" % (
                self.has_netblock, self.has_port, self.netblock, self.port)
 
+
 def get_port(mye):
 
     global current_token
@@ -82,6 +83,7 @@ def count_bits_set(myint):
 
     return count
 
+
 def inverse_mask_to_cidr(imask):
     """
     Use bitwise operations to determine the cidr number for
@@ -96,6 +98,7 @@ def inverse_mask_to_cidr(imask):
     # convert the number mask to the cidr number
     cidr = count_bits_set(intmask)
     return cidr
+
 
 def get_endpoint():
 
@@ -147,13 +150,18 @@ def parse_cisco(cisco_acl_line):
         myacler.error = 'Line does not include permit'
         return myacler
 
-    if 'remark' in cisco_acl_line.lower():
-        myacler.error = 'Remark line'
-        return myacler
-
     if '/' in cisco_acl_line.lower():
         myacler.error = 'Format issue, forward slash seen'
         return myacler
+
+    if 'remark' in cisco_acl_line.lower():
+        try:
+            # pull info from second "access-list" to end and use that
+            noremark = "access-list %s" % cisco_acl_line.split('access-list')[2].strip()
+            cisco_acl_line = noremark
+        except:
+            myacler.error = 'Could not parse remark line'
+            return myacler
 
     try:
         myacler.parsed = True
