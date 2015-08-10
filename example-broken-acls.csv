@@ -1,0 +1,2 @@
+# use this with -I 3 to test for insufficient columns
+col one,access-list 105 permit tcp 3.0.0.0 0.255.255.255 eq 25 10.20.10.0 0.0.0.255

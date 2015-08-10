@@ -7,8 +7,10 @@ from __future__ import print_function
 # originally used https://github.com/jathanism/acl library but abandoned
 # and created limited custom acl parser due to time/policy limitations around
 # getting site-packages modules installed at customer location
+from acler.acleritem import AclerItem
 from acler.cisco_custom import parse_cisco
 from acler.elapsed_time import elapsed_time                                                                                                        
+import csv
 from datetime import datetime, date, timedelta
 import logging, logging.handlers
 # not a best practice to import all, but what is called for by SEI docs
@@ -73,24 +75,64 @@ def set_assess_flag():
 def aclfile_to_aclers(aclfilename):
     """
     Read the lines in the acl file and convert each line to an
-    AclerItem, adding each AclerItem to the aclers list.
+    AclerItem, adding each AclerItem to the aclers list. If an
+    in file column is provided, process the file as a CSV.
     """
 
-    with open(aclfilename) as f:
+    # CSV
+    if options.infilecolumn:
 
-        logger.info("Processing ACL file: %s" % aclfilename)
+        logger.info("Processing ACL file %s as CSV file using column %d" % (aclfilename, options.infilecolumn))
 
-        # enumerate provides index and value
-        for i,v in enumerate(f.readlines()):
-            i = i + 1 # make one based
-            try:
-                myacler = parse_cisco(v)
-                myacler.line = i
-                aclers.append(myacler)
-            except Exception as e:
-                logger.error(e)
-                logger.error("ERROR: Could not process line %s: %s" % (i, v))
-                sys.exit(1)
+        with open(aclfilename, 'rb') as f:
+
+            reader = csv.reader(f) 
+
+            # enumerate provides index and value
+            for i,v in enumerate(reader):
+                i = i + 1 # make one based
+
+                # make sure there are enough columns in the row
+                if options.infilecolumn > len(v):
+                    msg = "CSV line %d does not have enough sections to process col %d: %s" % (i, options.infilecolumn, v)
+                    logger.error(msg)
+                    myname = ' '.join(v)
+                    myacler = AclerItem(myname)
+                    myacler.line = i
+                    myacler.error = msg
+                    aclers.append(myacler)
+                    continue
+
+                # convert to zero based for the list
+                col = options.infilecolumn - 1
+
+                try:
+                    myacler = parse_cisco(v[col])
+                    myacler.line = i
+                    aclers.append(myacler)
+                except Exception as e:
+                    logger.error(e)
+                    logger.error("Could not process line %s: %s" % (i, v[col]))
+                    sys.exit(1)
+
+    # Not CSV
+    else:
+
+        logger.info("Processing ACL file %s as text file" % aclfilename)
+
+        with open(aclfilename) as f:
+
+            # enumerate provides index and value
+            for i,v in enumerate(f.readlines()):
+                i = i + 1 # make one based
+                try:
+                    myacler = parse_cisco(v)
+                    myacler.line = i
+                    aclers.append(myacler)
+                except Exception as e:
+                    logger.error(e)
+                    logger.error("Could not process line %s: %s" % (i, v))
+                    sys.exit(1)
 
 
 def build_rwfilter_working_file():
@@ -115,6 +157,12 @@ def build_rwfilter_working_file():
     # get wall clock end time
     t2 = time.time()
     howlong = elapsed_time(int(t2 - t1))
+
+    # on at least the dev system, this can be so fast it doesn't 
+    # generate a time difference
+    if '' == howlong.strip():
+        howlong = '0s'
+
     logger.info("rwfilter took %s to run" % howlong)
 
     if returncode:
@@ -255,6 +303,7 @@ def option_and_logging_setup():
     parser = optparse.OptionParser(usage)
 
     parser.add_option("-i", "--in-file", dest="infile", help="""Non-extended Cisco ACL permit file to check traffic against. Example -i /home/username/my-acls.txt""")
+    parser.add_option("-I", "--in-file-column", dest="infilecolumn", help="""If the in file is a CSV, use this option to provide the one-based column that contains the ACL entry""")
     parser.add_option("-o", "--out-file-dir", dest="outfiledir", help="""Directory where the output file should go. Defaults to home dir if not provided via CLI or env ACLER_OUTFILE_DIR. Example --out-file-dir=/somewhere/acl-stuff""")
     parser.add_option("-L", "--log-file-dir", dest="logfiledir", help="""Directory where the rotating log files should go. Defaults to home dir if not provided via CLI or env ACLER_LOGFILE_DIR. Example -L /path/to/acler/logs""")
     parser.add_option("-T", "--tmp-file-dir", dest="tmpfiledir", help="""Directory where the temp files should go. Defaults to home dir if not provided via CLI or env ACLER_TMPFILE_DIR. Example --tmp-file-dir=/fastdrive/home/username""")
@@ -377,6 +426,20 @@ def option_and_logging_setup():
     if not os.path.exists(options.infile) and not os.path.isfile(options.infile):
         logger.error("in-file %s does not exist or is not a regular file" % options.infile)
         sys.exit(1)
+
+    # IN FILE COLUMN
+    if options.infilecolumn:
+        try:
+            # make sure an integer was provided
+            options.infilecolumn = int(options.infilecolumn)
+        except:
+            logger.error("In file column must be an integer")
+            sys.exit(1)
+
+        # make sure it's a positive integer
+        if not (1 <= options.infilecolumn):
+            logger.error("In file column must be 1 or higher")
+            sys.exit(1)
 
     # TMPFILE DIR
     if options.tmpfiledir:
