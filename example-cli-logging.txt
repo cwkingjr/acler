@@ -1,8 +1,0 @@
-INFO     Check the log file at /home/chuck/log-acler.log for debug-level logging info
-INFO     Processing ACL file: example-acls.txt
-INFO     Saving ACL SiLK set file at: /home/chuck/acler/tmp/acler-20150804T143120.set
-INFO     rwfilter command: rwfilter --start=2004/12/15 --end=2005/01/30 --anyset=/home/chuck/acler/tmp/acler-20150804T143120.set --proto=1-     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150804T143120.rwf
-INFO     rwfilter completed successfully
-INFO     Comparing ACL criteria to SiLK working file: /home/chuck/acler/tmp/acler-20150804T143120.rwf
-INFO     Writing output file: /home/chuck/acler/acler-20150804T143120.txt
-INFO     Deleting the set and rw files
