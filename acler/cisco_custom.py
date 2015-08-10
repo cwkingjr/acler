@@ -142,6 +142,15 @@ def parse_cisco(cisco_acl_line):
 
     myacler = AclerItem(cisco_acl_line) 
 
+    if 'remark' in cisco_acl_line.lower():
+        try:
+            # pull info from second "access-list" to end and use that
+            noremark = "access-list %s" % cisco_acl_line.split('access-list')[2].strip()
+            cisco_acl_line = noremark
+        except:
+            myacler.error = 'Could not parse remark line'
+            return myacler
+
     if not cisco_acl_line.startswith('access-list'):
         myacler.error = 'Line does not start with access-list'
         return myacler
@@ -153,15 +162,6 @@ def parse_cisco(cisco_acl_line):
     if '/' in cisco_acl_line.lower():
         myacler.error = 'Format issue, forward slash seen'
         return myacler
-
-    if 'remark' in cisco_acl_line.lower():
-        try:
-            # pull info from second "access-list" to end and use that
-            noremark = "access-list %s" % cisco_acl_line.split('access-list')[2].strip()
-            cisco_acl_line = noremark
-        except:
-            myacler.error = 'Could not parse remark line'
-            return myacler
 
     try:
         myacler.parsed = True
