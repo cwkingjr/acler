@@ -236,6 +236,38 @@ def write_result_file():
                 f.write(i.dump_no_assess())
 
 
+def write_csv_out_file():
+    """
+    Create a csv output file that contains that originial info but 
+    includes the results of the flow checks.
+    """
+
+    global aclers, options
+
+    # get the infile name without extension
+    myname = os.path.splitext(os.path.basename(options.infile))[0] 
+    csvoutfilename = "%s-acler-out-%s.csv" % (myname, mytime)
+    csvoutfile = "%s/%s" % (options.outfiledir, csvoutfilename)
+    logger.info("Writing aggregated CSV out to: %s" % csvoutfile)
+
+    csvin = list()
+    with open(options.infile, 'rb') as rf:
+        reader = csv.reader(rf)
+        for row in reader:
+            csvin.append(row)
+   
+    with open(csvoutfile, 'wb') as wf:
+        writer = csv.writer(wf)
+
+        # iterate csvin and prefix the output with the flow results
+        for i,v in enumerate(csvin):
+            # get the AclerItem for this line
+            a = [x for x in aclers if x.line == i + 1][0]
+            # prefix is a list of the results data
+            prefix = a.get_csv_out_prefix()
+            writer.writerow(prefix + v)
+
+
 def build_file_names():
     """Create file names with date time component"""
 
@@ -281,6 +313,8 @@ def main():
         build_rwfilter_working_file()
         process_aclers_against_rwfile()
         write_result_file()
+        if options.csvout:
+            write_csv_out_file()
     else:
         logger.error("Found no assessible ACL lines in %s" % options.infile)
         write_result_file()
@@ -309,6 +343,7 @@ def option_and_logging_setup():
     parser.add_option("-i", "--in-file", dest="infile", help="""Non-extended Cisco ACL permit file to check traffic against. Example -i /home/username/my-acls.txt""")
     parser.add_option("-I", "--in-file-column", dest="infilecolumn", help="""If the in file is a CSV, use this option to provide the one-based column that contains the ACL entry""")
     parser.add_option("-o", "--out-file-dir", dest="outfiledir", help="""Directory where the output file should go. Defaults to home dir if not provided via CLI or env ACLER_OUTFILE_DIR. Example --out-file-dir=/somewhere/acl-stuff""")
+    parser.add_option("-O", "--csv-out", action="store_true", dest="csvout", help="""If this option accompanies -I, a copy of the original CSV in file will be created that has the acler results prepended to each row""")
     parser.add_option("-L", "--log-file-dir", dest="logfiledir", help="""Directory where the rotating log files should go. Defaults to home dir if not provided via CLI or env ACLER_LOGFILE_DIR. Example -L /path/to/acler/logs""")
     parser.add_option("-T", "--tmp-file-dir", dest="tmpfiledir", help="""Directory where the temp files should go. Defaults to home dir if not provided via CLI or env ACLER_TMPFILE_DIR. Example --tmp-file-dir=/fastdrive/home/username""")
     parser.add_option("-n", "--no-del", action="store_true", dest="nodeltmp", help="""Do not delete temp files""")
@@ -497,6 +532,10 @@ def option_and_logging_setup():
     else:
         desired_types.append(options.silktypes.strip())
 
+    # csv out
+    if options.csvout and not options.infilecolumn:
+        logger.error("-O / --csv-out can only be used in conjunction with -I")
+        sys.exit(1)
       
     return (options, args)
 

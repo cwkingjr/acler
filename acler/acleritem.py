@@ -141,6 +141,32 @@ class AclerItem(object):
 
         return "Line %s|Not Assessed|%s|error %s\n" % (self.line, self.acl, self.error)
 
+    def get_csv_out_prefix(self):
+        """Dump record info as a list to add to /prefix the CSV infile data"""
+
+        ret = list()
+
+        if self.has_records():                                                                                                                    
+            # traffic
+            msg = "Traffic|%s|%s" % (self.get_types_with_records(), self.format_track())
+            ret.append(msg)
+            return ret
+        elif self.assess and not self.has_records():
+            # no traffic
+            msg = "No Traffic||"
+            ret.append(msg)
+            return ret
+        elif not self.assess:
+            # not assessed
+            msg = "Not Assessed||error %s" % self.error
+            ret.append(msg)
+            return ret
+        else:
+            # unknown problem
+            msg = "Unknown acler results||"
+            ret.append(msg)
+            return ret
+
     def get_silk_criteria(self):
         """
         Convert the contained variable values into a pysilk query string.

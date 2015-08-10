@@ -15,6 +15,9 @@ Options:
                         home dir if not provided via CLI or env
                         ACLER_OUTFILE_DIR. Example --out-file-dir=/somewhere
                         /acl-stuff
+  -O, --csv-out         If this option accompanies -I, a copy of the original
+                        CSV in file will be created that has the acler results
+                        prepended to each row
   -L LOGFILEDIR, --log-file-dir=LOGFILEDIR
                         Directory where the rotating log files should go.
                         Defaults to home dir if not provided via CLI or env
