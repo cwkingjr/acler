@@ -156,10 +156,9 @@ def build_rwfilter_working_file():
 
     # get wall clock end time
     t2 = time.time()
+    #TODO investigate further to see what gives on empty results
+    # on at least the dev system, this can generate an empty result
     howlong = elapsed_time(int(t2 - t1))
-
-    # on at least the dev system, this can be so fast it doesn't 
-    # generate a time difference
     if '' == howlong.strip():
         howlong = '0s'
 
@@ -198,16 +197,18 @@ def process_aclers_against_rwfile():
                 # forward query
                 q = i.get_silk_criteria()
                 if eval(q):
-                    i.add_track(rec.typename, 'FR', 1)
-                    i.add_track(rec.typename, 'FB', rec.bytes)
-                    i.add_track(rec.typename, 'FP', rec.packets)
+                    # Increase the forward counts
+                    i.add_track(rec.typename, 'FR', 1) # Forward Records
+                    i.add_track(rec.typename, 'FB', rec.bytes) # Forward Bytes
+                    i.add_track(rec.typename, 'FP', rec.packets) # Forward Packets
 
                 # reversed query
                 q = i.get_silk_reversed_criteria()
                 if eval(q):
-                    i.add_track(rec.typename, 'RR', 1)
-                    i.add_track(rec.typename, 'RB', rec.bytes)
-                    i.add_track(rec.typename, 'RP', rec.packets)
+                    # Increase the reversed counts
+                    i.add_track(rec.typename, 'RR', 1) # Reversed Records
+                    i.add_track(rec.typename, 'RB', rec.bytes) # Reversed Bytes
+                    i.add_track(rec.typename, 'RP', rec.packets) # Reversed Packets
 
 
 def write_result_file():
@@ -239,7 +240,7 @@ def write_result_file():
 def write_csv_out_file():
     """
     Create a csv output file that contains that originial info but 
-    includes the results of the flow checks.
+    includes the results of the flow checks (prepended).
     """
 
     global aclers, options
@@ -250,12 +251,14 @@ def write_csv_out_file():
     csvoutfile = "%s/%s" % (options.outfiledir, csvoutfilename)
     logger.info("Writing aggregated CSV out to: %s" % csvoutfile)
 
+    # load list with input csv info
     csvin = list()
     with open(options.infile, 'rb') as rf:
         reader = csv.reader(rf)
         for row in reader:
             csvin.append(row)
    
+    # write the out file with csv in info and the results for each line
     with open(csvoutfile, 'wb') as wf:
         writer = csv.writer(wf)
 
