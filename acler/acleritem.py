@@ -258,7 +258,7 @@ class AclerItem(object):
         if proto in protos:
             return protos[proto]
         else:
-            msg = "Unknown protocol %s. Please add protocol to acleritems.proto2num method." % proto
+            msg = "Unknown protocol %s. Please add protocol to acler/protocols.py." % proto
             raise Exception(msg)
 
 
