@@ -1,0 +1,5 @@
+export ACLER_TMPFILE_DIR=/home/chuck/acler/tmp
+export ACLER_OUTFILE_DIR=/home/chuck/acler
+export ACLER_LOGFILE_DIR=/home/chuck/acler
+export ACLER_SILK_CLASS=all
+export ACLER_SILK_TYPES=in,inweb,out,outweb
