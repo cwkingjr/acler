@@ -28,6 +28,10 @@ Options:
                         ACLER_TMPFILE_DIR. Example --tmp-file-
                         dir=/fastdrive/home/username
   -n, --no-del          Do not delete temp files
+  -p PROGRESS, --progress=PROGRESS
+                        Rough number of minutes between ACL comparision
+                        progress reports. Defaults to 15. Some initial
+                        readings will be logged regardless of this setting.
   -s START, --start=START
                         Rwfilter start-date (no hour). Example
                         --start=2015/07/23. Defaults to last seven days.

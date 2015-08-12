@@ -1,0 +1,16 @@
+INFO     Check the log file at /home/chuck/log-acler.log for debug-level logging info
+INFO     Processing ACL file example-acls.csv as CSV file using column 3
+INFO     Found 17 assessible ACL lines in example-acls.csv
+INFO     Saving ACL SiLK set file at: /home/chuck/acler/tmp/acler-20150812T145655.set
+INFO     rwfilter command: rwfilter --start=2004/12/15 --end=2005/01/30 --anyset=/home/chuck/acler/tmp/acler-20150812T145655.set --proto=1-     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150812T145655.rwf
+INFO     rwfilter took 0s to run
+INFO     rwfilter completed successfully
+INFO     Comparing ACL criteria to SiLK working file: /home/chuck/acler/tmp/acler-20150812T145655.rwf
+INFO     SiLK working file has 9455 records
+INFO     Compared ACL's to 10 of 9455 flow records in 0s (0.000 percent)
+INFO     Compared ACL's to 100 of 9455 flow records in 0s (1.000 percent)
+INFO     Compared ACL's to 1000 of 9455 flow records in 0s (10.000 percent)
+INFO     Writing output file: /home/chuck/acler/out-acler-20150812T145655.txt
+INFO     Writing aggregated CSV out to: /home/chuck/acler/example-acls-acler-out-20150812T145655.csv
+INFO     Deleting the set file
+INFO     Deleting the rw working file

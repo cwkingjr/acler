@@ -19,6 +19,7 @@ import optparse
 import os
 from os.path import expanduser
 import re
+import subprocess
 import sys
 import time
 
@@ -156,7 +157,6 @@ def build_rwfilter_working_file():
 
     # get wall clock end time
     t2 = time.time()
-    #TODO investigate further to see what gives on empty results
     # on at least the dev system, this can generate an empty result
     howlong = elapsed_time(int(t2 - t1))
     if '' == howlong.strip():
@@ -171,19 +171,86 @@ def build_rwfilter_working_file():
        logger.info("rwfilter completed successfully")
 
 
+def how_many_minutes(start_time):
+    """
+    Return the number of minutes from the provided
+    start_time until now.
+    """
+
+    right_now = time.time()
+    secs = int(start_time - right_now)
+    if secs < 60:
+        return 0
+    else:
+        return int(secs / 60)
+
+
+def get_silk_file_record_count(filename):
+    """Use rwfileinfo to get the record count"""
+
+    try:
+        myargs = ["rwfileinfo", "--fields=count-records", "--no-titles"]
+        myargs.append("%s" % filename)
+        rec_count = int(subprocess.check_output(myargs))
+        return rec_count
+    except Exception as e:
+        logger.error("Problem getting silk file record count: %s" % e)
+        return 0
+
+
 def process_aclers_against_rwfile():
     """
     Read the fwfile and load assessable acler items using
     silk criteria.
     """
 
-    global desired_types
+    global desired_types, options
 
     logger.info("Comparing ACL criteria to SiLK working file: %s" % rwfile)
+
+    # keep track of some info in order to log processing details, but
+    # not too many details
+    recs_per_time_period=0
+    last_log_time = time.time()
+    log_at_count=10
+    start_time = time.time()
+    total_recs = get_silk_file_record_count(rwfile)
+    total_recs_processed=0
+
+    if total_recs != 0:
+        logger.info("SiLK working file has %d records" % total_recs)
 
     infile = silkfile_open(rwfile, READ)
 
     for rec in infile:
+
+        total_recs_processed += 1
+
+        if total_recs_processed == log_at_count:
+
+            if recs_per_time_period == 0:
+                # check the time
+                if how_many_minutes(start_time) >= options.progress:
+                    recs_per_time_period = total_recs_processed
+
+            if recs_per_time_period > 0:
+                # increment the check by what we think we can do in the time period
+                log_at_count = total_recs_processed + recs_per_time_period
+            else:
+                # keep bumpting the count until we find a time value
+                log_at_count = log_at_count * 10 
+
+            last_log_time = time.time()
+            howlong = elapsed_time(int(last_log_time - start_time))
+            if '' == howlong.strip():
+                howlong = '0s'
+
+            if total_recs == 0:
+                logger.info("Compared ACL's to %d flow records in %s" % (total_recs_processed, howlong))
+            else:
+                percent = (total_recs_processed * 100) / total_recs
+                logger.info("Compared ACL's to %d of %d flow records in %s (%0.3f percent)" % (
+                            total_recs_processed, total_recs, howlong, percent))
 
         # only track requested silk types
         if not rec.typename in desired_types:
@@ -350,6 +417,7 @@ def option_and_logging_setup():
     parser.add_option("-L", "--log-file-dir", dest="logfiledir", help="""Directory where the rotating log files should go. Defaults to home dir if not provided via CLI or env ACLER_LOGFILE_DIR. Example -L /path/to/acler/logs""")
     parser.add_option("-T", "--tmp-file-dir", dest="tmpfiledir", help="""Directory where the temp files should go. Defaults to home dir if not provided via CLI or env ACLER_TMPFILE_DIR. Example --tmp-file-dir=/fastdrive/home/username""")
     parser.add_option("-n", "--no-del", action="store_true", dest="nodeltmp", help="""Do not delete temp files""")
+    parser.add_option("-p", "--progress", dest="progress", help="""Rough number of minutes between ACL comparision progress reports. Defaults to 15. Some initial readings will be logged regardless of this setting.""")
     parser.add_option("-s", "--start", dest="start", help="""Rwfilter start-date (no hour). Example --start=2015/07/23. Defaults to last seven days.""")
     parser.add_option("-e", "--end", dest="end", help="""Rwfilter end-date (no hour). Example --end=2015/07/30. Defaults to last seven days.""")
     parser.add_option("-c", "--class", dest="silkclass", help="""Rwfilter class. Example --class=<classname>. Defaults to environment variable ACLER_SILK_CLASS if present.""")
@@ -539,6 +607,24 @@ def option_and_logging_setup():
     if options.csvout and not options.infilecolumn:
         logger.error("-O / --csv-out can only be used in conjunction with -I")
         sys.exit(1)
+
+    # progress
+    if options.progress:
+        try:
+            # make sure an integer was provided
+            options.progress = int(options.progress)
+        except:
+            logger.error("Progress must be an integer")
+            sys.exit(1)
+
+        # make sure it's a positive integer
+        if not (1 <= options.progress):
+            logger.error("Progress must be 1 or higher")
+            sys.exit(1)
+
+    # default progress
+    if not options.progress:
+        options.progress = 15
       
     return (options, args)
 
