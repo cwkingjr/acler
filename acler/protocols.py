@@ -18,3 +18,17 @@ protos = {
     'l2tp' : '115',
     'sctp' : '132',
     }
+
+
+def proto2num(proto):
+    """
+    Convert a protocol name to the protocol number.
+    """
+     
+    proto = proto.lower()
+ 
+    if proto in protos:
+        return protos[proto]
+    else:
+        msg = "Unknown protocol %s. Please add protocol to acler/protocols.py." % proto
+        raise Exception(msg)

@@ -43,7 +43,7 @@ def get_initial_pull_silk_set():
     numerous times.
     """
 
-    global setfile, options
+    global setfile
 
     # gather up the smallest ip block from each acl
     blocks = list()
@@ -66,7 +66,7 @@ def set_assess_flag():
 
     for i in aclers:
         # if the acl was parsed and at least one side has an address
-        if i.parsed:
+        if i.parsed and i.error is None:
             if i.sip is not None or i.dip is not None:
                 i.assess = True
             else:
@@ -135,6 +135,17 @@ def aclfile_to_aclers(aclfilename):
                     logger.error("Could not process line %s: %s" % (i, v))
                     sys.exit(1)
 
+def get_elapsed_time_since(begin_time):
+    """
+    Take a starting time.time() param and return an elapsed time string
+    """
+
+    right_now = time.time()
+    howlong = elapsed_time(int(right_now - begin_time))
+    if '' == howlong.strip():
+        howlong = '0s'
+    return howlong
+
 
 def build_rwfilter_working_file():
     """
@@ -142,25 +153,21 @@ def build_rwfilter_working_file():
     a raw/rw working file.
     """
 
-    global options
-
     # get wall clock start time
     t1 = time.time()
 
-    rwfiltercommand = "rwfilter --start=%s --end=%s --anyset=%s --proto=1- \
+    # get the protocols that show up in the assessible ACL entries
+    protocols = aclers_assess_protocols()
+
+    rwfiltercommand = "rwfilter --start=%s --end=%s --anyset=%s --proto=%s \
     --class=%s --type=%s --pass=%s" % (options.start, options.end, setfile, \
-    options.silkclass, options.silktypes, rwfile)
+    protocols, options.silkclass, options.silktypes, rwfile)
 
     logger.info("rwfilter command: %s" % rwfiltercommand)
 
     returncode = os.system(rwfiltercommand)
 
-    # get wall clock end time
-    t2 = time.time()
-    # on at least the dev system, this can generate an empty result
-    howlong = elapsed_time(int(t2 - t1))
-    if '' == howlong.strip():
-        howlong = '0s'
+    howlong = get_elapsed_time_since(t1)
 
     logger.info("rwfilter took %s to run" % howlong)
 
@@ -191,6 +198,7 @@ def get_silk_file_record_count(filename):
     try:
         myargs = ["rwfileinfo", "--fields=count-records", "--no-titles"]
         myargs.append("%s" % filename)
+        #TODO figure how to do this on python 2.6
         rec_count = int(subprocess.check_output(myargs))
         return rec_count
     except Exception as e:
@@ -211,8 +219,7 @@ def process_aclers_against_rwfile():
     # keep track of some info in order to log processing details, but
     # not too many details
     recs_per_time_period=0
-    last_log_time = time.time()
-    log_at_count=10
+    log_at_count=500
     start_time = time.time()
     total_recs = get_silk_file_record_count(rwfile)
     total_recs_processed=0
@@ -221,6 +228,9 @@ def process_aclers_against_rwfile():
         logger.info("SiLK working file has %d records" % total_recs)
 
     infile = silkfile_open(rwfile, READ)
+
+    # don't iterate through the non-assessible ones for each rec
+    assessible_aclers = [a for a in aclers if a.assess]
 
     for rec in infile:
 
@@ -238,12 +248,9 @@ def process_aclers_against_rwfile():
                 log_at_count = total_recs_processed + recs_per_time_period
             else:
                 # keep bumpting the count until we find a time value
-                log_at_count = log_at_count * 10 
+                log_at_count = log_at_count * 2 
 
-            last_log_time = time.time()
-            howlong = elapsed_time(int(last_log_time - start_time))
-            if '' == howlong.strip():
-                howlong = '0s'
+            howlong = get_elapsed_time_since(start_time)
 
             if total_recs == 0:
                 logger.info("Compared ACL's to %d flow records in %s" % (total_recs_processed, howlong))
@@ -257,25 +264,34 @@ def process_aclers_against_rwfile():
             logger.debug("Skipping type: '%s' not in %s" % (rec.typename, desired_types))
             continue
 
-        for i in aclers:
+        for i in assessible_aclers:
 
-            if i.assess:
+            # protocol was removed from the forward and reverse criteria
+            # since it is checked here
+            # This check is expected to be a very quick filter to prevent
+            # having to evaluate all the criteria for non-matching records
+            if not rec.protocol == i.protocol:
+                continue
 
-                # forward query
-                q = i.get_silk_criteria()
-                if eval(q):
-                    # Increase the forward counts
-                    i.add_track(rec.typename, 'FR', 1) # Forward Records
-                    i.add_track(rec.typename, 'FB', rec.bytes) # Forward Bytes
-                    i.add_track(rec.typename, 'FP', rec.packets) # Forward Packets
+            # forward query
+            q = i.get_silk_criteria()
+            if eval(q):
+                # Increase the forward counts
+                i.add_track(rec.typename, 'FR', 1) # Forward Records
+                i.add_track(rec.typename, 'FB', rec.bytes) # Forward Bytes
+                i.add_track(rec.typename, 'FP', rec.packets) # Forward Packets
 
-                # reversed query
-                q = i.get_silk_reversed_criteria()
-                if eval(q):
-                    # Increase the reversed counts
-                    i.add_track(rec.typename, 'RR', 1) # Reversed Records
-                    i.add_track(rec.typename, 'RB', rec.bytes) # Reversed Bytes
-                    i.add_track(rec.typename, 'RP', rec.packets) # Reversed Packets
+            # reversed query
+            q = i.get_silk_reversed_criteria()
+            if eval(q):
+                # Increase the reversed counts
+                i.add_track(rec.typename, 'RR', 1) # Reversed Records
+                i.add_track(rec.typename, 'RB', rec.bytes) # Reversed Bytes
+                i.add_track(rec.typename, 'RP', rec.packets) # Reversed Packets
+
+    # report overall working file comparison timing
+    howlong = get_elapsed_time_since(start_time)
+    logger.info("Compared ACL's to %d flow records in %s" % (total_recs_processed, howlong))
 
 
 def write_result_file():
@@ -283,8 +299,6 @@ def write_result_file():
     Create an output file with each acl line, line number, 
     and result info.
     """
-
-    global options
 
     outfilename = "out-acler-%s.txt" % mytime
     outfile = "%s/%s" % (options.outfiledir, outfilename)
@@ -309,8 +323,6 @@ def write_csv_out_file():
     Create a csv output file that contains that originial info but 
     includes the results of the flow checks (prepended).
     """
-
-    global aclers, options
 
     # get the infile name without extension
     myname = os.path.splitext(os.path.basename(options.infile))[0] 
@@ -341,7 +353,7 @@ def write_csv_out_file():
 def build_file_names():
     """Create file names with date time component"""
 
-    global rwfile, setfile, mytime, options
+    global mytime, rwfile, setfile
 
     # get current datetime in clean format for file names
     # get the date and time with no seconds
@@ -359,15 +371,23 @@ def build_file_names():
 def aclers_assess_count():
     """Return the count of assessible items in the aclers list"""
 
-    global aclers
-
     mycount = len([x for x in aclers if x.assess])
     return mycount
 
 
+def aclers_assess_protocols():
+    """Return assessible protocols in the aclers list"""
+
+    # go through a few girations to get numerically-sorted list
+    proto_list = [int(x.protocol) for x in aclers if x.assess and x.protocol]
+    proto_list = sorted(list(set(proto_list)))
+    protocols = ','.join(map(str, proto_list))
+    return protocols
+    
+
 def main():
 
-    global aclers, rwfile, setfile, mytime, options, args
+    global options, args
 
     (options, args) = option_and_logging_setup()
 
@@ -464,10 +484,10 @@ def option_and_logging_setup():
     else:
         ch.setLevel(logging.INFO)
     # create formatters and add them to the handlers
-    # you can use the same one but I didn't want the datetime on the console
-    chformatter = logging.Formatter('%(levelname)-8s %(message)s')
+    #chformatter = logging.Formatter('%(levelname)-8s %(message)s')
     fhformatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    ch.setFormatter(chformatter)
+    #ch.setFormatter(chformatter)
+    ch.setFormatter(fhformatter)
     fh.setFormatter(fhformatter)
     # add the handlers to logger
     logger.addHandler(ch)

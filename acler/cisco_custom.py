@@ -7,7 +7,7 @@
 # will save potential months of approval wait time.
 
 from acleritem import AclerItem
-from protocols import protos
+from protocols import protos, proto2num
 
 tokens = None # token list
 current_token = 0 # index
@@ -183,6 +183,8 @@ def parse_cisco(cisco_acl_line):
             myacler.parsed = False
             myacler.error = "Protocol %s not in protos. Please add to protocols.protos." % tokens[3]
             return myacler
+        else:
+            myacler.protocol = int(proto2num(tokens[3]))
 
         current_token = 4
         source = get_endpoint()

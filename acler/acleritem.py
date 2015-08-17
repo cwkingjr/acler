@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-from protocols import protos
-
 class AclerItem(object):
     """
     Class to hold acler data elements
@@ -120,7 +118,7 @@ class AclerItem(object):
     def dump(self):
 
         return "<AclerItem: line %s, acl %s, parsed %s, error %s, assess %s, " \
-            "protocol %s, sip %s, sport %s, dip %s, dport %s,%s>" % \
+            "protocol %d, sip %s, sport %s, dip %s, dport %s,%s>" % \
             (self.line, self.acl, self.parsed, self.error, self.assess, \
             self.protocol, self.sip, self.sport, self.dip, self.dport, \
             self.format_track())
@@ -197,9 +195,6 @@ class AclerItem(object):
             else:
                 items.append("rec.dport == %s" % self.dport)
 
-        if self.protocol is not None:
-            items.append("rec.protocol == %s" % AclerItem.proto2num(self.protocol))
-
         criteria = ' and '.join(items)
 
         self.silk_criteria_cache = criteria
@@ -237,29 +232,11 @@ class AclerItem(object):
             else:
                 items.append("rec.sport == %s" % self.dport)
 
-        if self.protocol is not None:
-            items.append("rec.protocol == %s" % AclerItem.proto2num(self.protocol))
-
         criteria = ' and '.join(items)
 
         self.silk_criteria_reversed_cache = criteria
 
         return criteria
-
-
-    @staticmethod
-    def proto2num(proto):
-        """
-        Convert a protocol name to the protocol number.
-        """
-
-        proto = proto.lower()
-
-        if proto in protos:
-            return protos[proto]
-        else:
-            msg = "Unknown protocol %s. Please add protocol to acler/protocols.py." % proto
-            raise Exception(msg)
 
 
     def smallest_ip_block(self):
