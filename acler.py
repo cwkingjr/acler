@@ -294,6 +294,29 @@ def process_aclers_against_rwfile():
     logger.info("Compared ACL's to %d flow records in %s" % (total_recs_processed, howlong))
 
 
+def process_aclers_using_rwfilter_and_rwuniq():
+    """
+    Instead of using pysilk, let's see the performance difference
+    when calling out to rwfilter and rwuniq two times for 
+    every ACL entry, once forward and once reversed.
+    """
+
+    # standard rwuniq criteria used on each call
+    rwu = ['rwuniq','--fields=type,proto','--values=records,bytes,packets']
+
+    # don't assess non-assessible ACL's
+    assessible_aclers = [a for a in aclers if a.assess]
+
+    for a in assessible_aclers:
+
+        rwf = a.get_rwfiler_criteria()
+
+
+
+
+
+
+
 def write_result_file():
     """
     Create an output file with each acl line, line number, 
@@ -401,7 +424,11 @@ def main():
         logger.info("Found %d assessible ACL lines in %s" % (numentries, options.infile))
         get_initial_pull_silk_set()
         build_rwfilter_working_file()
-        process_aclers_against_rwfile()
+
+        #TODO add option to try only one or the other of the next two functions
+        #process_aclers_against_rwfile()
+        process_aclers_using_rwfilter_and_rwuniq()
+
         write_result_file()
         if options.csvout:
             write_csv_out_file()
