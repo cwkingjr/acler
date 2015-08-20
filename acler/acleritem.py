@@ -23,6 +23,8 @@ class AclerItem(object):
         self.assess = False
         self.silk_criteria_cache = None
         self.silk_criteria_reversed_cache = None
+        self.rwfilter_criteria_cache = None
+        self.rwfilter_criteria_reversed_cache = None
 
         if acl is None or acl == '':
             raise ValueError("One Cisco-formatted ACL line required")
@@ -237,6 +239,72 @@ class AclerItem(object):
         self.silk_criteria_reversed_cache = criteria
 
         return criteria
+
+
+    def get_rwfilter_criteria(self):
+        """
+        Convert the contained variable values into an rwfilter query string.
+        """
+
+        if self.rwfilter_criteria_cache:
+            return self.rwfilter_criteria_cache
+
+        items = list()
+        items.append('rwfilter')
+        items.append('--pass=stdout')
+
+        if self.protocol is not None:
+            items.append("--protocol=%s" % self.protocol)
+
+        if self.sip is not None:
+            items.append("--saddress=%s" % self.sip)
+
+        if self.sport is not None:
+            items.append("--sport=%s" % self.sport)
+
+        if self.dip is not None:
+            items.append("--daddress=%s" % self.dip)
+
+        if self.dport is not None:
+            items.append("--dport=%s" % self.dport)
+
+        self.rwfilter_criteria_cache = items
+
+        # passing back a list
+        return items
+
+
+    def get_rwfilter_reversed_criteria(self):
+        """
+        Convert the contained variable values into a reversed
+        rwfilter query string.
+        """
+
+        if self.rwfilter_criteria_reversed_cache:
+            return self.rwfilter_criteria_reversed_cache
+
+        items = list()
+        items.append('rwfilter')
+        items.append('--pass=stdout')
+
+        if self.protocol is not None:
+            items.append("--protocol=%s" % self.protocol)
+
+        if self.sip is not None:
+            items.append("--daddress=%s" % self.sip)
+
+        if self.sport is not None:
+            items.append("--dport=%s" % self.sport)
+
+        if self.dip is not None:
+            items.append("--saddress=%s" % self.dip)
+
+        if self.dport is not None:
+            items.append("--sport=%s" % self.dport)
+
+        self.rwfilter_criteria_reversed_cache = items
+
+        return items
 
 
     def smallest_ip_block(self):

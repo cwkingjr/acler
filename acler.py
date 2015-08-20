@@ -302,19 +302,77 @@ def process_aclers_using_rwfilter_and_rwuniq():
     """
 
     # standard rwuniq criteria used on each call
-    rwu = ['rwuniq','--fields=type,proto','--values=records,bytes,packets']
+    rwu = ['rwuniq','--fields=type','--values=records,bytes,packets','--no-columns','--no-final-delimiter']
 
     # don't assess non-assessible ACL's
     assessible_aclers = [a for a in aclers if a.assess]
 
     for a in assessible_aclers:
 
-        rwf = a.get_rwfiler_criteria()
+        # Forward
 
+        rwf = a.get_rwfilter_criteria()
 
+        # add the working file location
+        rwf.append("%s" % rwfile)
 
+        logger.debug("Forward output for acler: %s" % a) 
+        logger.debug("Forward rwfilter: %s" % rwf)
 
+        # use rwfilter criteria for this acl to read the working file
+        # and pipe the records to rwuniq to get the total b/p/r counts
+        # per type
+        p1 = subprocess.Popen(rwf, stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(rwu, stdin=p1.stdout, stdout=subprocess.PIPE)
+        output = p2.communicate()[0]
+        mylines = output.split("\n")
 
+        for i in mylines:
+
+            # push raw rwuniq output to debug
+            if i.strip() != '':
+                logger.debug(i)
+
+            if i.startswith('type') or i.strip() == '':
+                continue
+
+            (mytype, myrecs, mybytes, mypackets) = i.split('|')
+
+            # Increase the forward counts
+            a.add_track(mytype, 'FR', int(myrecs))    # Forward Records
+            a.add_track(mytype, 'FB', int(mybytes))   # Forward Bytes
+            a.add_track(mytype, 'FP', int(mypackets)) # Forward Packets
+
+        # Reverse
+
+        rwf = a.get_rwfilter_reversed_criteria()
+
+        # add the working file location
+        rwf.append("%s" % rwfile)
+
+        logger.debug("Reverse output for acler: %s" % a) 
+        logger.debug("Reverse rwfilter: %s" % rwf)
+
+        p1 = subprocess.Popen(rwf, stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(rwu, stdin=p1.stdout, stdout=subprocess.PIPE)
+        output = p2.communicate()[0]
+        mylines = output.split("\n")
+
+        for i in mylines:
+
+            # push raw rwuniq output to debug
+            if i.strip() != '':
+                logger.debug(i)
+
+            if i.startswith('type') or i.strip() == '':
+                continue
+
+            (mytype, myrecs, mybytes, mypackets) = i.split('|')
+
+            # Increase the reverse counts
+            a.add_track(mytype, 'RR', int(myrecs))    # Reverse Records
+            a.add_track(mytype, 'RB', int(mybytes))   # Reverse Bytes
+            a.add_track(mytype, 'RP', int(mypackets)) # Reverse Packets
 
 
 def write_result_file():
