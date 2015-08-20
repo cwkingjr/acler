@@ -27,11 +27,21 @@ Options:
                         home dir if not provided via CLI or env
                         ACLER_TMPFILE_DIR. Example --tmp-file-
                         dir=/fastdrive/home/username
+  -m, --mode-pysilk     The default record inquiry mode is to call out to
+                        rwfilter and rwuniq twice for each ACL record, once
+                        forward, once reversed, via a subprocess. When this
+                        switch is selected, the working file is read once and
+                        all ACL criteria is compared to every line of the file
+                        twice using pysilk integrations.
   -n, --no-del          Do not delete temp files
   -p PROGRESS, --progress=PROGRESS
                         Rough number of minutes between ACL comparision
-                        progress reports. Defaults to 15. Some initial
-                        readings will be logged regardless of this setting.
+                        progress reports when using -m for pysilk mode.
+                        Defaults to 15. Some initial readings will be logged
+                        regardless of this setting. When not using -m, this
+                        option is not used and progress info will be logged
+                        for every 50 ACL entries assessed and then again when
+                        the assessment is completed.
   -s START, --start=START
                         Rwfilter start-date (no hour). Example
                         --start=2015/07/23. Defaults to last seven days.

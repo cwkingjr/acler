@@ -135,6 +135,7 @@ def aclfile_to_aclers(aclfilename):
                     logger.error("Could not process line %s: %s" % (i, v))
                     sys.exit(1)
 
+
 def get_elapsed_time_since(begin_time):
     """
     Take a starting time.time() param and return an elapsed time string
@@ -195,15 +196,22 @@ def how_many_minutes(start_time):
 def get_silk_file_record_count(filename):
     """Use rwfileinfo to get the record count"""
 
+    myargs = ["rwfileinfo", "--fields=count-records", "--no-titles"]
+    myargs.append("%s" % filename)
+
     try:
-        myargs = ["rwfileinfo", "--fields=count-records", "--no-titles"]
-        myargs.append("%s" % filename)
-        #TODO figure how to do this on python 2.6
+        # python 2.7+
         rec_count = int(subprocess.check_output(myargs))
         return rec_count
-    except Exception as e:
-        logger.error("Problem getting silk file record count: %s" % e)
-        return 0
+    except:
+        # 2.6
+        try:
+            p1 = subprocess.Popen(myargs, stdout=subprocess.PIPE)
+            output = p1.communicate()[0]
+            return int(output)
+        except:
+            logger.warn("Problem getting silk file record count")
+            return 0
 
 
 def process_aclers_against_rwfile():
@@ -213,8 +221,6 @@ def process_aclers_against_rwfile():
     """
 
     global desired_types, options
-
-    logger.info("Comparing ACL criteria to SiLK working file: %s" % rwfile)
 
     # keep track of some info in order to log processing details, but
     # not too many details
@@ -301,13 +307,28 @@ def process_aclers_using_rwfilter_and_rwuniq():
     every ACL entry, once forward and once reversed.
     """
 
+    start_time = time.time()
+
+    total_recs = get_silk_file_record_count(rwfile)
+    if total_recs != 0:
+        logger.info("SiLK working file has %d records" % total_recs)
+
     # standard rwuniq criteria used on each call
     rwu = ['rwuniq','--fields=type','--values=records,bytes,packets','--no-columns','--no-final-delimiter']
 
     # don't assess non-assessible ACL's
     assessible_aclers = [a for a in aclers if a.assess]
 
+    num_assessible_acls = len(assessible_aclers)
+
+    logger.info("Processing %d assessible ACL entries via rwfilter and rwuniq" % 
+                num_assessible_acls)
+
+    mycounter = 0
+
     for a in assessible_aclers:
+
+        mycounter += 1
 
         # Forward
 
@@ -373,6 +394,22 @@ def process_aclers_using_rwfilter_and_rwuniq():
             a.add_track(mytype, 'RR', int(myrecs))    # Reverse Records
             a.add_track(mytype, 'RB', int(mybytes))   # Reverse Bytes
             a.add_track(mytype, 'RP', int(mypackets)) # Reverse Packets
+
+        if mycounter % 50 == 0:
+            howlong = get_elapsed_time_since(start_time)
+            if total_recs == 0:
+                logger.info("Compared %d ACL's in %s" % (mycounter, howlong))
+            else:
+                logger.info("Compared %d ACL's to %d flow records in %s" % 
+                            (mycounter, total_recs, howlong))
+
+    # report overall working file comparison timing
+    howlong = get_elapsed_time_since(start_time)
+    if total_recs == 0:
+        logger.info("Compared %d ACL's in %s" % (mycounter, howlong))
+    else:
+        logger.info("Compared %d ACL's to %d flow records in %s" % 
+                     (mycounter, total_recs, howlong))
 
 
 def write_result_file():
@@ -483,6 +520,8 @@ def main():
         get_initial_pull_silk_set()
         build_rwfilter_working_file()
 
+        logger.info("Comparing ACL criteria to SiLK working file: %s" % rwfile)
+
         if options.modepysilk:
             process_aclers_against_rwfile()
         else:
@@ -524,7 +563,7 @@ def option_and_logging_setup():
     parser.add_option("-T", "--tmp-file-dir", dest="tmpfiledir", help="""Directory where the temp files should go. Defaults to home dir if not provided via CLI or env ACLER_TMPFILE_DIR. Example --tmp-file-dir=/fastdrive/home/username""")
     parser.add_option("-m", "--mode-pysilk", action="store_true", dest="modepysilk", help="""The default record inquiry mode is to call out to rwfilter and rwuniq twice for each ACL record, once forward, once reversed, via a subprocess. When this switch is selected, the working file is read once and all ACL criteria is compared to every line of the file twice using pysilk integrations.""")
     parser.add_option("-n", "--no-del", action="store_true", dest="nodeltmp", help="""Do not delete temp files""")
-    parser.add_option("-p", "--progress", dest="progress", help="""Rough number of minutes between ACL comparision progress reports. Defaults to 15. Some initial readings will be logged regardless of this setting.""")
+    parser.add_option("-p", "--progress", dest="progress", help="""Rough number of minutes between ACL comparision progress reports when using -m for pysilk mode. Defaults to 15. Some initial readings will be logged regardless of this setting. When not using -m, this option is not used and progress info will be logged for every 50 ACL entries assessed and then again when the assessment is completed.""")
     parser.add_option("-s", "--start", dest="start", help="""Rwfilter start-date (no hour). Example --start=2015/07/23. Defaults to last seven days.""")
     parser.add_option("-e", "--end", dest="end", help="""Rwfilter end-date (no hour). Example --end=2015/07/30. Defaults to last seven days.""")
     parser.add_option("-c", "--class", dest="silkclass", help="""Rwfilter class. Example --class=<classname>. Defaults to environment variable ACLER_SILK_CLASS if present.""")
