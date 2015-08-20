@@ -483,9 +483,10 @@ def main():
         get_initial_pull_silk_set()
         build_rwfilter_working_file()
 
-        #TODO add option to try only one or the other of the next two functions
-        #process_aclers_against_rwfile()
-        process_aclers_using_rwfilter_and_rwuniq()
+        if options.modepysilk:
+            process_aclers_against_rwfile()
+        else:
+            process_aclers_using_rwfilter_and_rwuniq()
 
         write_result_file()
         if options.csvout:
@@ -521,6 +522,7 @@ def option_and_logging_setup():
     parser.add_option("-O", "--csv-out", action="store_true", dest="csvout", help="""If this option accompanies -I, a copy of the original CSV in file will be created that has the acler results prepended to each row""")
     parser.add_option("-L", "--log-file-dir", dest="logfiledir", help="""Directory where the rotating log files should go. Defaults to home dir if not provided via CLI or env ACLER_LOGFILE_DIR. Example -L /path/to/acler/logs""")
     parser.add_option("-T", "--tmp-file-dir", dest="tmpfiledir", help="""Directory where the temp files should go. Defaults to home dir if not provided via CLI or env ACLER_TMPFILE_DIR. Example --tmp-file-dir=/fastdrive/home/username""")
+    parser.add_option("-m", "--mode-pysilk", action="store_true", dest="modepysilk", help="""The default record inquiry mode is to call out to rwfilter and rwuniq twice for each ACL record, once forward, once reversed, via a subprocess. When this switch is selected, the working file is read once and all ACL criteria is compared to every line of the file twice using pysilk integrations.""")
     parser.add_option("-n", "--no-del", action="store_true", dest="nodeltmp", help="""Do not delete temp files""")
     parser.add_option("-p", "--progress", dest="progress", help="""Rough number of minutes between ACL comparision progress reports. Defaults to 15. Some initial readings will be logged regardless of this setting.""")
     parser.add_option("-s", "--start", dest="start", help="""Rwfilter start-date (no hour). Example --start=2015/07/23. Defaults to last seven days.""")
