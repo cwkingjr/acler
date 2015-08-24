@@ -10,9 +10,9 @@ access-list 105 permit tcp 5.5.33.0 0.0.0.255 eq 25 any eq 210
 access-list 105 permit tcp any 10.40.0.0 0.0.255.255 eq 25
 access-list 105 permit tcp host 5.5.5.15 range 21 22 10.50.0.0 0.0.255.255 range 21 22
 access-list 105 permit tcp 5.5.6.0/24 range 21 22 10.50.0.0 0.0.255.255 range 21 22
+!access-list 105 remark permit tcp any 10.10.0.0 0.0.255.255 eq 135 access-list 105 permit tcp any 10.10.0.0 0.0.255.255 eq 135
 access-list 105 remark permit tcp any 10.10.0.0 0.0.255.255 eq 135 access-list 105 permit tcp any 10.10.0.0 0.0.255.255 eq 135
 access-list 105 Remark permit tcp any 10.20.0.0 0.0.255.255 eq 135 access-list 105 permit tcp any 10.20.0.0 0.0.255.255 eq 135
-access-list 105 REMARK permit tcp any 10.30.0.0 0.0.255.255 eq 135 access-list 105 permit tcp any 10.30.0.0 0.0.255.255 eq 135
 access-list 111 permit tcp any host 128.3.78.107 eq 25
 access-list 111 permit tcp host 57.166.108.94 host 128.3.48.103 eq 1044
 access-list 111 permit tcp host 204.116.37.5 eq 80 host 128.3.48.186

@@ -142,6 +142,10 @@ def parse_cisco(cisco_acl_line):
 
     myacler = AclerItem(cisco_acl_line) 
 
+    if not cisco_acl_line.startswith('access-list'):
+        myacler.error = 'Line does not start with access-list'
+        return myacler
+
     if 'remark' in cisco_acl_line.lower():
         try:
             # pull info from second "access-list" to end and use that
@@ -150,10 +154,6 @@ def parse_cisco(cisco_acl_line):
         except:
             myacler.error = 'Could not parse remark line'
             return myacler
-
-    if not cisco_acl_line.startswith('access-list'):
-        myacler.error = 'Line does not start with access-list'
-        return myacler
 
     if not 'permit' in cisco_acl_line.lower():
         myacler.error = 'Line does not include permit'
