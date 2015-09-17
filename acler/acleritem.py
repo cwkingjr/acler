@@ -11,18 +11,24 @@ class AclerItem(object):
     """
 
     def __init__(self, acl):
+
+        # acl criteria
         self.sip = None
         self.dip = None
         self.dport = None
         self.sport = None
         self.protocol = None
+
+        # logic tags
         self.parsed = False
         self.line = None
         self.error = None
         self.track = dict() # track counts
-        self.assess = False
-        self.silk_criteria_cache = None
-        self.silk_criteria_reversed_cache = None
+        self.assessible = False
+        self.num_days_checked = 0 # repo days checked for this traffic
+        self.finished = False
+
+        # cachees
         self.rwfilter_criteria_cache = None
         self.rwfilter_criteria_reversed_cache = None
 
@@ -30,6 +36,28 @@ class AclerItem(object):
             raise ValueError("One Cisco-formatted ACL line required")
         else:
             self.acl = acl.strip()
+
+    def assess(self):
+        """Do we need to check the repo for this ACL criteria"""
+
+        if self.has_records():
+            self.finished = True
+
+        if self.finished:
+            return False
+
+        if self.assessible:
+            return True
+
+        # if the acl was parsed and at least one side has an address
+        if self.parsed and self.error is None:
+            if self.sip is not None or self.dip is not None:
+                self.assessible = True
+                return True
+            else:
+                self.error = 'Not assessed due to no sip or dip block'
+                return False
+
 
     def add_track(self, typename, counttype, count):
         """Push type-specific counts to a dict of dicts"""
@@ -128,118 +156,44 @@ class AclerItem(object):
     def dump_traffic(self):
         """Dump record in format needed for has traffic output file entry"""
 
-        return "Line %s|Traffic %s|%s|%s\n" % \
+        return "%s|Traffic %s|%s|%s\n" % \
             (self.line, self.get_types_with_records(), self.acl, self.format_track())
 
     def dump_no_traffic(self):
         """Dump record in format needed for has no traffic output file entry"""
 
-        return "Line %s|No Traffic|%s\n" % (self.line, self.acl)
+        return "%s|No Traffic|%s\n" % (self.line, self.acl)
 
     def dump_no_assess(self):
         """Dump record in format needed for not assessed output file entry"""
 
-        return "Line %s|Not Assessed|%s|error %s\n" % (self.line, self.acl, self.error)
+        return "%s|Not Assessed|%s|error %s\n" % (self.line, self.acl, self.error)
 
     def get_csv_out_prefix(self):
-        """Dump record info as a list to add to /prefix the CSV infile data"""
+        """Dump record info as a list to add to/prefix the CSV infile data"""
 
         ret = list()
 
         if self.has_records():                                                                                                                    
             # traffic
-            msg = "Traffic|%s|%s" % (self.get_types_with_records(), self.format_track())
+            msg = "%s,Traffic|%s|%s" % (self.line, self.get_types_with_records(), self.format_track())
             ret.append(msg)
             return ret
         elif self.assess and not self.has_records():
             # no traffic
-            msg = "No Traffic||"
+            msg = "%s,No Traffic||" % self.line
             ret.append(msg)
             return ret
         elif not self.assess:
             # not assessed
-            msg = "Not Assessed||error %s" % self.error
+            msg = "%s,Not Assessed||error %s" % (self.line, self.error)
             ret.append(msg)
             return ret
         else:
             # unknown problem
-            msg = "Unknown acler results||"
+            msg = "%s,Unknown acler results||" % self.line
             ret.append(msg)
             return ret
-
-    def get_silk_criteria(self):
-        """
-        Convert the contained variable values into a pysilk query string.
-        """
-
-        if self.silk_criteria_cache:
-            return self.silk_criteria_cache
-
-        items = list()
-
-        if self.sip is not None:
-            items.append("rec.sip in IPWildcard('%s')" % self.sip)
-
-        if self.sport is not None:
-            if '-' in self.sport:
-                (first, last) = self.sport.split('-')
-                items.append("rec.sport in [%s,%s]" % (first, last))
-            else:
-                items.append("rec.sport == %s" % self.sport)
-
-        if self.dip is not None:
-            items.append("rec.dip in IPWildcard('%s')" % self.dip)
-
-        if self.dport is not None:
-            if '-' in self.dport:
-                (first, last) = self.dport.split('-')
-                items.append("rec.dport in [%s,%s]" % (first, last))
-            else:
-                items.append("rec.dport == %s" % self.dport)
-
-        criteria = ' and '.join(items)
-
-        self.silk_criteria_cache = criteria
-
-        return criteria
-
-
-    def get_silk_reversed_criteria(self):
-        """
-        Convert the contained variable values into a reversed pysilk query string.
-        """
-
-        if self.silk_criteria_reversed_cache:
-            return self.silk_criteria_reversed_cache
-
-        items = list()
-
-        if self.sip is not None:
-            items.append("rec.dip in IPWildcard('%s')" % self.sip)
-
-        if self.sport is not None:
-            if '-' in self.sport:
-                (first, last) = self.sport.split('-')
-                items.append("rec.dport in [%s,%s]" % (first, last))
-            else:
-                items.append("rec.dport == %s" % self.sport)
-
-        if self.dip is not None:
-            items.append("rec.sip in IPWildcard('%s')" % self.dip)
-
-        if self.dport is not None:
-            if '-' in self.dport:
-                (first, last) = self.dport.split('-')
-                items.append("rec.sport in [%s,%s]" % (first, last))
-            else:
-                items.append("rec.sport == %s" % self.dport)
-
-        criteria = ' and '.join(items)
-
-        self.silk_criteria_reversed_cache = criteria
-
-        return criteria
-
 
     def get_rwfilter_criteria(self):
         """

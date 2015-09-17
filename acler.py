@@ -48,29 +48,14 @@ def get_initial_pull_silk_set():
     # gather up the smallest ip block from each acl
     blocks = list()
     for i in aclers:
-        if i.assess:
+        if i.assess():
             a = i.smallest_ip_block()
             blocks.append(a)
 
     # build a set file
     myset = IPSet(blocks)
-    logger.info("Saving ACL SiLK set file at: %s" % setfile)
+    logger.debug("Saving ACL SiLK set file at: %s" % setfile)
     myset.save(setfile)
-
-
-def set_assess_flag():
-    """
-    Iterate aclers and set the assess flag on items that can
-    be assessed against the rwfile.
-    """
-
-    for i in aclers:
-        # if the acl was parsed and at least one side has an address
-        if i.parsed and i.error is None:
-            if i.sip is not None or i.dip is not None:
-                i.assess = True
-            else:
-                i.error = 'Not assessed due to no sip or dip block'
 
 
 def aclfile_to_aclers(aclfilename):
@@ -80,60 +65,38 @@ def aclfile_to_aclers(aclfilename):
     in file column is provided, process the file as a CSV.
     """
 
-    # CSV
-    if options.infilecolumn:
+    logger.info("Processing ACL file %s as CSV file using column %d" % (aclfilename, options.infilecolumn))
 
-        logger.info("Processing ACL file %s as CSV file using column %d" % (aclfilename, options.infilecolumn))
+    with open(aclfilename, 'rb') as f:
 
-        with open(aclfilename, 'rb') as f:
+        reader = csv.reader(f) 
 
-            reader = csv.reader(f) 
+        # enumerate provides index and value
+        for i,v in enumerate(reader):
+            i = i + 1 # make one based
 
-            # enumerate provides index and value
-            for i,v in enumerate(reader):
-                i = i + 1 # make one based
+            # make sure there are enough columns in the row
+            if options.infilecolumn > len(v):
+                msg = "CSV line %d does not have enough sections to process col %d: %s" % (i, options.infilecolumn, v)
+                logger.error(msg)
+                myname = ' '.join(v)
+                myacler = AclerItem(myname)
+                myacler.line = i
+                myacler.error = msg
+                aclers.append(myacler)
+                continue
 
-                # make sure there are enough columns in the row
-                if options.infilecolumn > len(v):
-                    msg = "CSV line %d does not have enough sections to process col %d: %s" % (i, options.infilecolumn, v)
-                    logger.error(msg)
-                    myname = ' '.join(v)
-                    myacler = AclerItem(myname)
-                    myacler.line = i
-                    myacler.error = msg
-                    aclers.append(myacler)
-                    continue
+            # convert to zero based for the list
+            col = options.infilecolumn - 1
 
-                # convert to zero based for the list
-                col = options.infilecolumn - 1
-
-                try:
-                    myacler = parse_cisco(v[col])
-                    myacler.line = i
-                    aclers.append(myacler)
-                except Exception as e:
-                    logger.error(e)
-                    logger.error("Could not process line %s: %s" % (i, v[col]))
-                    sys.exit(1)
-
-    # Not CSV
-    else:
-
-        logger.info("Processing ACL file %s as text file" % aclfilename)
-
-        with open(aclfilename) as f:
-
-            # enumerate provides index and value
-            for i,v in enumerate(f.readlines()):
-                i = i + 1 # make one based
-                try:
-                    myacler = parse_cisco(v)
-                    myacler.line = i
-                    aclers.append(myacler)
-                except Exception as e:
-                    logger.error(e)
-                    logger.error("Could not process line %s: %s" % (i, v))
-                    sys.exit(1)
+            try:
+                myacler = parse_cisco(v[col])
+                myacler.line = i
+                aclers.append(myacler)
+            except Exception as e:
+                logger.error(e)
+                logger.error("Could not process line %s: %s" % (i, v[col]))
+                sys.exit(1)
 
 
 def get_elapsed_time_since(begin_time):
@@ -214,92 +177,6 @@ def get_silk_file_record_count(filename):
             return 0
 
 
-def process_aclers_against_rwfile():
-    """
-    Read the fwfile and load assessable acler items using
-    silk criteria.
-    """
-
-    global desired_types, options
-
-    # keep track of some info in order to log processing details, but
-    # not too many details
-    recs_per_time_period=0
-    log_at_count=500
-    start_time = time.time()
-    total_recs = get_silk_file_record_count(rwfile)
-    total_recs_processed=0
-
-    if total_recs != 0:
-        logger.info("SiLK working file has %d records" % total_recs)
-
-    infile = silkfile_open(rwfile, READ)
-
-    # don't iterate through the non-assessible ones for each rec
-    assessible_aclers = [a for a in aclers if a.assess]
-
-    for rec in infile:
-
-        total_recs_processed += 1
-
-        if total_recs_processed == log_at_count:
-
-            if recs_per_time_period == 0:
-                # check the time
-                if how_many_minutes(start_time) >= options.progress:
-                    recs_per_time_period = total_recs_processed
-
-            if recs_per_time_period > 0:
-                # increment the check by what we think we can do in the time period
-                log_at_count = total_recs_processed + recs_per_time_period
-            else:
-                # keep bumpting the count until we find a time value
-                log_at_count = log_at_count * 2 
-
-            howlong = get_elapsed_time_since(start_time)
-
-            if total_recs == 0:
-                logger.info("Compared ACL's to %d flow records in %s" % (total_recs_processed, howlong))
-            else:
-                percent = (total_recs_processed * 100) / total_recs
-                logger.info("Compared ACL's to %d of %d flow records in %s (%0.3f percent)" % (
-                            total_recs_processed, total_recs, howlong, percent))
-
-        # only track requested silk types
-        if not rec.typename in desired_types:
-            logger.debug("Skipping type: '%s' not in %s" % (rec.typename, desired_types))
-            continue
-
-        for i in assessible_aclers:
-
-            # protocol was removed from the forward and reverse criteria
-            # since it is checked here
-            # This check is expected to be a very quick filter to prevent
-            # having to evaluate all the criteria for non-matching records
-            if not rec.protocol == i.protocol:
-                continue
-
-            # forward query
-            q = i.get_silk_criteria()
-            if eval(q):
-                # Increase the forward counts
-                i.add_track(rec.typename, 'FR', 1) # Forward Records
-                i.add_track(rec.typename, 'FB', rec.bytes) # Forward Bytes
-                i.add_track(rec.typename, 'FP', rec.packets) # Forward Packets
-
-            # reversed query
-            q = i.get_silk_reversed_criteria()
-            if eval(q):
-                # Increase the reversed counts
-                i.add_track(rec.typename, 'RR', 1) # Reversed Records
-                i.add_track(rec.typename, 'RB', rec.bytes) # Reversed Bytes
-                i.add_track(rec.typename, 'RP', rec.packets) # Reversed Packets
-
-    # report overall working file comparison timing
-    howlong = get_elapsed_time_since(start_time)
-    logger.info("Compared ACL's to %d flow records in %s" % (total_recs_processed, howlong))
-
-
 def process_aclers_using_rwfilter_and_rwuniq():
     """
     Instead of using pysilk, let's see the performance difference
@@ -317,7 +194,7 @@ def process_aclers_using_rwfilter_and_rwuniq():
     rwu = ['rwuniq','--fields=type','--values=records,bytes,packets','--no-columns','--no-final-delimiter']
 
     # don't assess non-assessible ACL's
-    assessible_aclers = [a for a in aclers if a.assess]
+    assessible_aclers = [a for a in aclers if a.assess()]
 
     num_assessible_acls = len(assessible_aclers)
 
@@ -412,30 +289,6 @@ def process_aclers_using_rwfilter_and_rwuniq():
                      (mycounter, total_recs, howlong))
 
 
-def write_result_file():
-    """
-    Create an output file with each acl line, line number, 
-    and result info.
-    """
-
-    outfilename = "out-acler-%s.txt" % mytime
-    outfile = "%s/%s" % (options.outfiledir, outfilename)
-
-    with open(outfile, 'w') as f:
-
-        logger.info("Writing output file: %s" % outfile)
-
-        for i in aclers:
-            # entries with traffic
-            if i.has_records():
-                f.write(i.dump_traffic())
-            # entries with no traffic
-            elif i.assess and not i.has_records():
-                f.write(i.dump_no_traffic())
-            elif not i.assess:
-                f.write(i.dump_no_assess())
-
-
 def write_csv_out_file():
     """
     Create a csv output file that contains that originial info but 
@@ -489,7 +342,7 @@ def build_file_names():
 def aclers_assess_count():
     """Return the count of assessible items in the aclers list"""
 
-    mycount = len([x for x in aclers if x.assess])
+    mycount = len([x for x in aclers if x.assess()])
     return mycount
 
 
@@ -497,7 +350,7 @@ def aclers_assess_protocols():
     """Return assessible protocols in the aclers list"""
 
     # go through a few girations to get numerically-sorted list
-    proto_list = [int(x.protocol) for x in aclers if x.assess and x.protocol]
+    proto_list = [int(x.protocol) for x in aclers if x.assess() and x.protocol]
     proto_list = sorted(list(set(proto_list)))
     protocols = ','.join(map(str, proto_list))
     return protocols
@@ -511,7 +364,6 @@ def main():
 
     build_file_names()
     aclfile_to_aclers(options.infile)
-    set_assess_flag()
 
     # make sure there's something to work on
     numentries = aclers_assess_count()
@@ -522,17 +374,11 @@ def main():
 
         logger.info("Comparing ACL criteria to SiLK working file: %s" % rwfile)
 
-        if options.modepysilk:
-            process_aclers_against_rwfile()
-        else:
-            process_aclers_using_rwfilter_and_rwuniq()
+        process_aclers_using_rwfilter_and_rwuniq()
 
-        write_result_file()
-        if options.csvout:
-            write_csv_out_file()
+        write_csv_out_file()
     else:
         logger.error("Found no assessible ACL lines in %s" % options.infile)
-        write_result_file()
 
     if not options.nodeltmp:
         if os.path.exists(setfile):
