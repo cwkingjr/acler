@@ -28,16 +28,17 @@ aclers = list() # list of AclerItem objects
 setfile = None # silk set file
 mytime = None # clean datetime info for inclusion in file names
 rwfile = None # rwf working file
+tmprwfile = None # rwf working file for each acl check
 desired_types = list() # silk types to track
 options = None # option parsing
 args = None # option parsing
 logger = None # logging handler
 
 
-def get_initial_pull_silk_set():
+def build_set():
     """
     Build a silk set of the smallest ip block (sip or dip) from
-    each parsed acl record. This will be used by the initial 
+    each assessible acl record. This will be used by the 
     rwfilter pull to build a working file of the traffic we
     need to analyze. This is instead of hitting the repo 
     numerous times.
@@ -61,11 +62,10 @@ def get_initial_pull_silk_set():
 def aclfile_to_aclers(aclfilename):
     """
     Read the lines in the acl file and convert each line to an
-    AclerItem, adding each AclerItem to the aclers list. If an
-    in file column is provided, process the file as a CSV.
+    AclerItem, adding each AclerItem to the aclers list.
     """
 
-    logger.info("Processing ACL file %s as CSV file using column %d" % (aclfilename, options.infilecolumn))
+    logger.info("Processing %s using column %d for ACL entries." % (aclfilename, options.infilecolumn))
 
     with open(aclfilename, 'rb') as f:
 
@@ -77,11 +77,21 @@ def aclfile_to_aclers(aclfilename):
 
             # make sure there are enough columns in the row
             if options.infilecolumn > len(v):
-                msg = "CSV line %d does not have enough sections to process col %d: %s" % (i, options.infilecolumn, v)
+                msg = "Row %d does not have enough sections to process col %d: %s" % (i, options.infilecolumn, v)
                 logger.error(msg)
                 myname = ' '.join(v)
                 myacler = AclerItem(myname)
-                myacler.line = i
+                try:
+                    # try to get a line number from first col
+                    myint = v[0].strip()
+                    # make sure it's an int
+                    myint = int(myint)
+                    myacler.line = str(myint) 
+                except:
+                    # craft a line number that won't conflict with csv first col numbers
+                    myacler.line = str(i + 2000000)
+                    logger.debug("Using crafted line number %d for line with too few cols: %s" % 
+                                (myacler.line, v))
                 myacler.error = msg
                 aclers.append(myacler)
                 continue
@@ -91,11 +101,16 @@ def aclfile_to_aclers(aclfilename):
 
             try:
                 myacler = parse_cisco(v[col])
-                myacler.line = i
                 aclers.append(myacler)
+                # try to get a line number from first col
+                myint = v[0].strip()
+                # make sure it's an int
+                myint = int(myint)
+                # store it as a string
+                myacler.line = str(myint) 
             except Exception as e:
                 logger.error(e)
-                logger.error("Could not process line %s: %s" % (i, v[col]))
+                logger.error("Could not process row %s: %s" % (i, v[col]))
                 sys.exit(1)
 
 
@@ -111,7 +126,7 @@ def get_elapsed_time_since(begin_time):
     return howlong
 
 
-def build_rwfilter_working_file():
+def build_rwfilter_working_file(start, end):
     """
     Query the repo using the acl address block set and generate
     a raw/rw working file.
@@ -124,22 +139,23 @@ def build_rwfilter_working_file():
     protocols = aclers_assess_protocols()
 
     rwfiltercommand = "rwfilter --start=%s --end=%s --anyset=%s --proto=%s \
-    --class=%s --type=%s --pass=%s" % (options.start, options.end, setfile, \
+    --class=%s --type=%s --pass=%s" % (start, end, setfile, \
     protocols, options.silkclass, options.silktypes, rwfile)
 
-    logger.info("rwfilter command: %s" % rwfiltercommand)
+    logger.info("repo pull rwfilter command: %s" % rwfiltercommand)
 
     returncode = os.system(rwfiltercommand)
 
     howlong = get_elapsed_time_since(t1)
 
-    logger.info("rwfilter took %s to run" % howlong)
+    logger.info("repo pull rwfilter took %s to run" % howlong)
 
     if returncode:
-       logger.error("rwfilter return code not zero: %s" % returncode)
-       sys.exit(returncode)
+       logger.error("repo pull rwfilter return code not zero: %s" % returncode)
+       #TODO fix return code issue
+       #sys.exit(returncode)
     else:
-       logger.info("rwfilter completed successfully")
+       logger.info("repo pull rwfilter completed successfully")
 
 
 def how_many_minutes(start_time):
@@ -173,25 +189,19 @@ def get_silk_file_record_count(filename):
             output = p1.communicate()[0]
             return int(output)
         except:
-            logger.warn("Problem getting silk file record count")
-            return 0
+            logger.error("Can not determine record count for silk files")
+            sys.exit(1)
 
 
 def process_aclers_using_rwfilter_and_rwuniq():
     """
-    Instead of using pysilk, let's see the performance difference
-    when calling out to rwfilter and rwuniq two times for 
-    every ACL entry, once forward and once reversed.
+    For each assessible ACL, pull a temp rwf file from the repo pull file
+    using the ACL criteria and if there are records in it, use rwuniq
+    to get the bytes, packets, and records. Do this in both criteria 
+    directions, forward and reversed.
     """
 
     start_time = time.time()
-
-    total_recs = get_silk_file_record_count(rwfile)
-    if total_recs != 0:
-        logger.info("SiLK working file has %d records" % total_recs)
-
-    # standard rwuniq criteria used on each call
-    rwu = ['rwuniq','--fields=type','--values=records,bytes,packets','--no-columns','--no-final-delimiter']
 
     # don't assess non-assessible ACL's
     assessible_aclers = [a for a in aclers if a.assess()]
@@ -207,70 +217,46 @@ def process_aclers_using_rwfilter_and_rwuniq():
 
         mycounter += 1
 
-        # Forward
-
+        # Forward criteria
         rwf = a.get_rwfilter_criteria()
 
-        # add the working file location
+        # add the working file locations
+        rwf.append("--pass=%s" % tmprwfile)
         rwf.append("%s" % rwfile)
 
-        logger.debug("Forward output for acler: %s" % a) 
-        logger.debug("Forward rwfilter: %s" % rwf)
+        logger.debug("Forward criteria check for acler: %s" % a) 
+        logger.debug("Forward criteria rwfilter: %s" % rwf)
 
         # use rwfilter criteria for this acl to read the working file
-        # and pipe the records to rwuniq to get the total b/p/r counts
-        # per type
-        p1 = subprocess.Popen(rwf, stdout=subprocess.PIPE)
-        p2 = subprocess.Popen(rwu, stdin=p1.stdout, stdout=subprocess.PIPE)
-        output = p2.communicate()[0]
-        mylines = output.split("\n")
+        # and create a temporary rwfilter file that rwuniq can read
+        # No longer piping this straight to rwuniq so that rwuniq
+        # does not get invoked with no-record cases.
+        rwfilter = ' '.join(rwf)
+        returncode = os.system(rwfilter)
+        if returncode:
+            logger.error("rwfilter errored out with code of %s for %s" % (returncode, rwfilter))
+            #TODO fix ruturn code 256 issue
+            #sys.exit(returncode)
 
-        for i in mylines:
+        get_rwuniq_info(True, a) # True = forward
 
-            # push raw rwuniq output to debug
-            if i.strip() != '':
-                logger.debug(i)
-
-            if i.startswith('type') or i.strip() == '':
-                continue
-
-            (mytype, myrecs, mybytes, mypackets) = i.split('|')
-
-            # Increase the forward counts
-            a.add_track(mytype, 'FR', int(myrecs))    # Forward Records
-            a.add_track(mytype, 'FB', int(mybytes))   # Forward Bytes
-            a.add_track(mytype, 'FP', int(mypackets)) # Forward Packets
-
-        # Reverse
-
+        # Reversed criteria
         rwf = a.get_rwfilter_reversed_criteria()
 
-        # add the working file location
+        # add the working file locations
+        rwf.append("--pass=%s" % tmprwfile)
         rwf.append("%s" % rwfile)
 
-        logger.debug("Reverse output for acler: %s" % a) 
-        logger.debug("Reverse rwfilter: %s" % rwf)
+        logger.debug("Reversed criteria check for acler: %s" % a) 
+        logger.debug("Reversed criteria rwfilter: %s" % rwf)
 
-        p1 = subprocess.Popen(rwf, stdout=subprocess.PIPE)
-        p2 = subprocess.Popen(rwu, stdin=p1.stdout, stdout=subprocess.PIPE)
-        output = p2.communicate()[0]
-        mylines = output.split("\n")
-
-        for i in mylines:
-
-            # push raw rwuniq output to debug
-            if i.strip() != '':
-                logger.debug(i)
-
-            if i.startswith('type') or i.strip() == '':
-                continue
-
-            (mytype, myrecs, mybytes, mypackets) = i.split('|')
-
-            # Increase the reverse counts
-            a.add_track(mytype, 'RR', int(myrecs))    # Reverse Records
-            a.add_track(mytype, 'RB', int(mybytes))   # Reverse Bytes
-            a.add_track(mytype, 'RP', int(mypackets)) # Reverse Packets
+        rwfilter = ' '.join(rwf)
+        returncode = os.system(rwfilter)
+        if returncode:
+            logger.error("rwfilter errored out with code of %s for %s" % (returncode, rwfilter))
+            #TODO fix ruturn code 256 issue
+            #sys.exit(returncode)
+        get_rwuniq_info(False, a) # False = reversed
 
         if mycounter % 50 == 0:
             howlong = get_elapsed_time_since(start_time)
@@ -289,17 +275,54 @@ def process_aclers_using_rwfilter_and_rwuniq():
                      (mycounter, total_recs, howlong))
 
 
-def write_csv_out_file():
+def get_rwuniq_info(forward, myacler):
+    """Use rwuniq to determine the number of bytes, packets, records for each ACL"""
+
+    # standard rwuniq criteria used on each call
+    rwu = ['rwuniq','--fields=type','--values=records,bytes,packets','--no-columns','--no-final-delimiter']
+
+    # if the temp rwf file has records, process them
+    total_recs = get_silk_file_record_count(tmprwfile)
+
+    if total_recs != 0:
+        p2 = subprocess.Popen(rwu, stdin=p1.stdout, stdout=subprocess.PIPE)
+        output = p2.communicate()[0]
+        mylines = output.split("\n")
+
+        for i in mylines:
+
+            # push raw rwuniq output to debug
+            if i.strip() != '':
+                logger.debug(i)
+
+            if i.startswith('type') or i.strip() == '':
+                continue
+
+            (mytype, myrecs, mybytes, mypackets) = i.split('|')
+
+            if forward:
+                # Increase the forward counts
+                myacler.add_track(mytype, 'FR', int(myrecs))    # Forward Records
+                myacler.add_track(mytype, 'FB', int(mybytes))   # Forward Bytes
+                myacler.add_track(mytype, 'FP', int(mypackets)) # Forward Packets
+            else:
+                # Increase the reverse counts
+                myacler.add_track(mytype, 'RR', int(myrecs))    # Reverse Records
+                myacler.add_track(mytype, 'RB', int(mybytes))   # Reverse Bytes
+                myacler.add_track(mytype, 'RP', int(mypackets)) # Reverse Packets
+
+
+def write_csv_out_file(namepart):
     """
     Create a csv output file that contains that originial info but 
-    includes the results of the flow checks (prepended).
+    includes the results of the flow checks.
     """
 
     # get the infile name without extension
     myname = os.path.splitext(os.path.basename(options.infile))[0] 
-    csvoutfilename = "%s-acler-out-%s.csv" % (myname, mytime)
+    csvoutfilename = "%s-%s-%s.csv" % (myname, namepart, mytime)
     csvoutfile = "%s/%s" % (options.outfiledir, csvoutfilename)
-    logger.info("Writing aggregated CSV out to: %s" % csvoutfile)
+    logger.info("Writing CSV out to: %s" % csvoutfile)
 
     # load list with input csv info
     csvin = list()
@@ -315,7 +338,8 @@ def write_csv_out_file():
         # iterate csvin and prefix the output with the flow results
         for i,v in enumerate(csvin):
             # get the AclerItem for this line
-            a = [x for x in aclers if x.line == i + 1][0]
+            myline = v[0].strip()
+            a = [x for x in aclers if x.line == myline][0]
             # prefix is a list of the results data
             prefix = a.get_csv_out_prefix()
             writer.writerow(prefix + v)
@@ -324,7 +348,7 @@ def write_csv_out_file():
 def build_file_names():
     """Create file names with date time component"""
 
-    global mytime, rwfile, setfile
+    global mytime, rwfile, setfile, tmprwfile
 
     # get current datetime in clean format for file names
     # get the date and time with no seconds
@@ -337,6 +361,9 @@ def build_file_names():
 
     # silk set file
     setfile = "%s/acler-%s.set" % (options.tmpfiledir, mytime)
+
+    # temp rwfilter pulled from working file
+    tmprwfile = "%s/acler-%s-one-acl-check.rwf" % (options.tmpfiledir, mytime)
 
 
 def aclers_assess_count():
@@ -369,26 +396,58 @@ def main():
     numentries = aclers_assess_count()
     if numentries > 0:
         logger.info("Found %d assessible ACL lines in %s" % (numentries, options.infile))
-        get_initial_pull_silk_set()
-        build_rwfilter_working_file()
+        build_set()
 
-        logger.info("Comparing ACL criteria to SiLK working file: %s" % rwfile)
+        # first, let's just run the thing for one hour to eliminate 
+        # any huge, constant talkers from the other pulls
 
-        process_aclers_using_rwfilter_and_rwuniq()
+        logger.info("First just checking for huge, constant talkers by checking one hour")
+        start = "%s:00" % options.start
+        build_rwfilter_working_file(start, start)
+        total_recs = get_silk_file_record_count(rwfile)
+        logger.info("SiLK working file has %d records" % total_recs)
+        if total_recs >= 1:
+            process_aclers_using_rwfilter_and_rwuniq()
+        mynamepart = "%s-00-hour" % options.start.replace('/','-')
+        write_csv_out_file(mynamepart)
+        unlink_working_files()
 
-        write_csv_out_file()
+        # now run day by day
+        DATE_FORMAT = "%Y/%m/%d"
+        mystart = datetime.strptime(options.start, DATE_FORMAT)
+        myend = datetime.strptime(options.end, DATE_FORMAT)
+        delta = timedelta(days=1)
+        
+        while mystart <= myend:
+            start = mystart.isoformat().replace('-','/')
+            logger.info("Processing ACL's for %s" % start)
+            build_rwfilter_working_file(start, start)
+            total_recs = get_silk_file_record_count(rwfile)
+            logger.info("SiLK working file has %d records" % total_recs)
+            if total_recs >= 1:
+                process_aclers_using_rwfilter_and_rwuniq()
+            write_csv_out_file(start.replace('/','-'))
+
+            # move to the next day
+            mystart += delta
+            
+            # clean up
+            unlink_working_files()
+        
     else:
         logger.error("Found no assessible ACL lines in %s" % options.infile)
 
-    if not options.nodeltmp:
-        if os.path.exists(setfile):
-            logger.info("Deleting the set file")
-            os.remove(setfile)
-        if os.path.exists(rwfile):
-            logger.info("Deleting the rw working file")
-            os.remove(rwfile)
-    else:
-        logger.info("Don't forget to prune your set/rw files manually")
+
+def unlink_working_files():
+    unlink_file(setfile)
+    unlink_file(rwfile)
+    unlink_file(tmprwfile)
+
+
+def unlink_file(myfile):
+    if os.path.exists(myfile):
+        logger.info("Deleting %s" % myfile)
+        os.remove(myfile)
 
 
 def option_and_logging_setup():
@@ -401,20 +460,16 @@ def option_and_logging_setup():
 
     parser = optparse.OptionParser(usage)
 
-    parser.add_option("-i", "--in-file", dest="infile", help="""Non-extended Cisco ACL permit file to check traffic against. Example -i /home/username/my-acls.txt""")
-    parser.add_option("-I", "--in-file-column", dest="infilecolumn", help="""If the in file is a CSV, use this option to provide the one-based column that contains the ACL entry""")
+    parser.add_option("-i", "--in-file", dest="infile", help="""CSV file with non-extended Cisco ACL permit entries to check traffic against. First column must include integer line numbers for manual partial completion results reassembly in case the script gets killed and you have to rerun part of the days. Use csv_add_int.py if your CSV doesn't already have these. Use the -I option to specify the column with the ACL entries. Example /path/to/acker.py -i /home/username/my-acls.csv -I 3""")
+    parser.add_option("-I", "--in-file-column", dest="infilecolumn", help="""Use this option to provide the one-based column number that contains the ACL entry""")
     parser.add_option("-o", "--out-file-dir", dest="outfiledir", help="""Directory where the output file should go. Defaults to home dir if not provided via CLI or env ACLER_OUTFILE_DIR. Example --out-file-dir=/somewhere/acl-stuff""")
-    parser.add_option("-O", "--csv-out", action="store_true", dest="csvout", help="""If this option accompanies -I, a copy of the original CSV in file will be created that has the acler results prepended to each row""")
     parser.add_option("-L", "--log-file-dir", dest="logfiledir", help="""Directory where the rotating log files should go. Defaults to home dir if not provided via CLI or env ACLER_LOGFILE_DIR. Example -L /path/to/acler/logs""")
-    parser.add_option("-T", "--tmp-file-dir", dest="tmpfiledir", help="""Directory where the temp files should go. Defaults to home dir if not provided via CLI or env ACLER_TMPFILE_DIR. Example --tmp-file-dir=/fastdrive/home/username""")
-    parser.add_option("-m", "--mode-pysilk", action="store_true", dest="modepysilk", help="""The default record inquiry mode is to call out to rwfilter and rwuniq twice for each ACL record, once forward, once reversed, via a subprocess. When this switch is selected, the working file is read once and all ACL criteria is compared to every line of the file twice using pysilk integrations.""")
-    parser.add_option("-n", "--no-del", action="store_true", dest="nodeltmp", help="""Do not delete temp files""")
-    parser.add_option("-p", "--progress", dest="progress", help="""Rough number of minutes between ACL comparision progress reports when using -m for pysilk mode. Defaults to 15. Some initial readings will be logged regardless of this setting. When not using -m, this option is not used and progress info will be logged for every 50 ACL entries assessed and then again when the assessment is completed.""")
-    parser.add_option("-s", "--start", dest="start", help="""Rwfilter start-date (no hour). Example --start=2015/07/23. Defaults to last seven days.""")
-    parser.add_option("-e", "--end", dest="end", help="""Rwfilter end-date (no hour). Example --end=2015/07/30. Defaults to last seven days.""")
+    parser.add_option("-T", "--tmp-file-dir", dest="tmpfiledir", help="""Directory where the temp files should go. Must be provided via CLI or env ACLER_TMPFILE_DIR. Example --tmp-file-dir=/fastlargedrive/home/username""")
+    parser.add_option("-s", "--start", dest="start", help="""Rwfilter start-date (no hour). Example --start=2015/07/23. Defaults to last 14 days.""")
+    parser.add_option("-e", "--end", dest="end", help="""Rwfilter end-date (no hour). Example --end=2015/07/30. Defaults to last 14 days.""")
     parser.add_option("-c", "--class", dest="silkclass", help="""Rwfilter class. Example --class=<classname>. Defaults to environment variable ACLER_SILK_CLASS if present.""")
     parser.add_option("-t", "--types", dest="silktypes", help="""Rwfilter types. Example --types=in,out,inweb,outweb. Defaults to environment variable ACLER_SILK_TYPES if present. Check your silk.conf file for available types (usually at /data/silk.conf).""")
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="""Bumps log level from info to debug""")
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="""Bumps the CLI log level from info to debug. Log file is always debug.""")
 
     (options, args) = parser.parse_args()
 
@@ -469,7 +524,7 @@ def option_and_logging_setup():
     ##########
 
     logger.debug("=================================================================================")
-    logger.debug("========================== STARTING NEW SCRIPT RUN ==============================")
+    logger.debug("========================== START OF NEW SCRIPT RUN ==============================")
     logger.debug("=================================================================================")
 
     logger.info("Check the log file at %s for debug-level logging info" % LOG_FILENAME)
@@ -487,8 +542,8 @@ def option_and_logging_setup():
             logger.error('-s parameter :%s: does not match required format: YYYY/MM/DD' % options.start)
             sys.exit(1)
     else:
-        # Use seven days ago
-        weekago = date.today() - timedelta(days=7)
+        # Use 14 days ago
+        weekago = date.today() - timedelta(days=14)
         options.start = weekago.isoformat().replace('-','/')
 
     if options.end:
@@ -521,7 +576,7 @@ def option_and_logging_setup():
     # IN FILE
     if not options.infile:
         if os.environ.get('ACLER_DEV'):
-            options.infile = 'example-acls.txt'
+            options.infile = 'example-acls.csv'
         else:
             logger.error("-i / --in-file required.")
             sys.exit(1)
@@ -542,6 +597,9 @@ def option_and_logging_setup():
         if not (1 <= options.infilecolumn):
             logger.error("In file column must be 1 or higher")
             sys.exit(1)
+    else:
+        logger.error("In file column required. See option -I")
+        sys.exit(1)
 
     # TMPFILE DIR
     if options.tmpfiledir:
@@ -551,10 +609,10 @@ def option_and_logging_setup():
         # or if included via .bashrc use it
         options.tmpfiledir = os.environ['ACLER_TMPFILE_DIR']
     else:
-        # or just use their home directory
-        options.tmpfiledir = expanduser('~')
+        logger.error("Temp file dir required. See option -T")
+        sys.exit(1)
 
-    # make sure the outfilepath exists
+    # make sure the tmpfilepath exists
     if not os.path.exists(options.tmpfiledir):
         try:
             os.mkdir(options.tmpfiledir)
@@ -595,29 +653,6 @@ def option_and_logging_setup():
     else:
         desired_types.append(options.silktypes.strip())
 
-    # csv out
-    if options.csvout and not options.infilecolumn:
-        logger.error("-O / --csv-out can only be used in conjunction with -I")
-        sys.exit(1)
-
-    # progress
-    if options.progress:
-        try:
-            # make sure an integer was provided
-            options.progress = int(options.progress)
-        except:
-            logger.error("Progress must be an integer")
-            sys.exit(1)
-
-        # make sure it's a positive integer
-        if not (1 <= options.progress):
-            logger.error("Progress must be 1 or higher")
-            sys.exit(1)
-
-    # default progress
-    if not options.progress:
-        options.progress = 15
-      
     return (options, args)
 
 if __name__ == '__main__':

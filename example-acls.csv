@@ -1,5 +1,5 @@
-1,Some bogus stuff in col one,col two,access-list 105 permit tcp 3.0.0.0 0.255.255.255 eq 25 10.20.10.0 0.0.0.255,col four,col five
-2,,access-list 105 permit tcp host 3.3.3.12 host 10.10.10.22 eq 1433,,
+Some bogus stuff in col one,col two,access-list 105 permit tcp 3.0.0.0 0.255.255.255 eq 25 10.20.10.0 0.0.0.255,col four,col five
+,,access-list 105 permit tcp host 3.3.3.12 host 10.10.10.22 eq 1433,,
 ,,access-list 105 permit udp host 3.3.3.12 host 10.10.10.22 eq 53,,
 ,,access-list 105 permit ahp host 3.3.3.12 host 10.10.10.22,,
 ,,access-list 105 permit esp host 3.3.3.12 host 10.10.10.22,,

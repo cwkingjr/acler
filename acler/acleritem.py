@@ -205,7 +205,6 @@ class AclerItem(object):
 
         items = list()
         items.append('rwfilter')
-        items.append('--pass=stdout')
 
         if self.protocol is not None:
             items.append("--protocol=%s" % self.protocol)
@@ -239,7 +238,6 @@ class AclerItem(object):
 
         items = list()
         items.append('rwfilter')
-        items.append('--pass=stdout')
 
         if self.protocol is not None:
             items.append("--protocol=%s" % self.protocol)
