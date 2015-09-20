@@ -176,23 +176,23 @@ class AclerItem(object):
 
         if self.has_records():                                                                                                                    
             # traffic
-            msg = "%s,Traffic|%s|%s" % (self.line, self.get_types_with_records(), self.format_track())
-            ret.append(msg)
+            ret.append(self.line)
+            ret.append("Traffic|%s|%s" % (self.get_types_with_records(), self.format_track()))
             return ret
         elif self.assess and not self.has_records():
             # no traffic
-            msg = "%s,No Traffic||" % self.line
-            ret.append(msg)
+            ret.append(self.line)
+            ret.append("No Traffic||")
             return ret
         elif not self.assess:
             # not assessed
-            msg = "%s,Not Assessed||error %s" % (self.line, self.error)
-            ret.append(msg)
+            ret.append(self.line)
+            ret.append("Not Assessed||Error %s" % self.error)
             return ret
         else:
             # unknown problem
-            msg = "%s,Unknown acler results||" % self.line
-            ret.append(msg)
+            ret.append(self.line)
+            ret.append("Unknown acler results||" % self.line)
             return ret
 
     def get_rwfilter_criteria(self):
@@ -285,4 +285,3 @@ class AclerItem(object):
                 return self.sip
             else:
                 return self.dip
-

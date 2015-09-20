@@ -138,24 +138,21 @@ def build_rwfilter_working_file(start, end):
     # get the protocols that show up in the assessible ACL entries
     protocols = aclers_assess_protocols()
 
-    rwfiltercommand = "rwfilter --start=%s --end=%s --anyset=%s --proto=%s \
+    cmd = "rwfilter --start=%s --end=%s --anyset=%s --proto=%s \
     --class=%s --type=%s --pass=%s" % (start, end, setfile, \
     protocols, options.silkclass, options.silktypes, rwfile)
 
-    logger.info("repo pull rwfilter command: %s" % rwfiltercommand)
+    logger.info("repo pull rwfilter command: %s" % cmd)
 
-    returncode = os.system(rwfiltercommand)
+    returncode = os.system(cmd)
 
     howlong = get_elapsed_time_since(t1)
 
-    logger.info("repo pull rwfilter took %s to run" % howlong)
+    logger.info("Repo pull rwfilter took %s to run" % howlong)
 
     if returncode:
-       logger.error("repo pull rwfilter return code not zero: %s" % returncode)
-       #TODO fix return code issue
-       #sys.exit(returncode)
-    else:
-       logger.info("repo pull rwfilter completed successfully")
+       logger.error("Repo pull rwfilter return code not zero: %s" % returncode)
+       sys.exit(returncode)
 
 
 def how_many_minutes(start_time):
@@ -185,15 +182,15 @@ def get_silk_file_record_count(filename):
     except:
         # 2.6
         try:
-            p1 = subprocess.Popen(myargs, stdout=subprocess.PIPE)
-            output = p1.communicate()[0]
+            p = subprocess.Popen(myargs, stdout=subprocess.PIPE)
+            output = p.communicate()[0]
             return int(output)
         except:
             logger.error("Can not determine record count for silk files")
             sys.exit(1)
 
 
-def process_aclers_using_rwfilter_and_rwuniq():
+def process_aclers_using_rwfilter_and_rwuniq(total_recs):
     """
     For each assessible ACL, pull a temp rwf file from the repo pull file
     using the ACL criteria and if there are records in it, use rwuniq
@@ -218,61 +215,72 @@ def process_aclers_using_rwfilter_and_rwuniq():
         mycounter += 1
 
         # Forward criteria
+
+        unlink_file(tmprwfile)
+        unlink_file(tmprwfile)
+
+        rwf = None
         rwf = a.get_rwfilter_criteria()
+        if not isinstance(rwf, list):
+            logger.error("Problem getting forward criteria for %s" % a)
+            sys.exit()
+        if len(rwf) < 1:
+            logger.error("Forward criteria list is empty for %s" % a)
+            sys.exit()
 
         # add the working file locations
         rwf.append("--pass=%s" % tmprwfile)
         rwf.append("%s" % rwfile)
 
-        logger.debug("Forward criteria check for acler: %s" % a) 
-        logger.debug("Forward criteria rwfilter: %s" % rwf)
+        logger.debug("Forward: %s" % a) 
 
         # use rwfilter criteria for this acl to read the working file
         # and create a temporary rwfilter file that rwuniq can read
         # No longer piping this straight to rwuniq so that rwuniq
         # does not get invoked with no-record cases.
-        rwfilter = ' '.join(rwf)
-        returncode = os.system(rwfilter)
+        cmd = ' '.join(rwf)
+        logger.debug("Forward: %s" % cmd)
+        returncode = os.system(cmd)
         if returncode:
-            logger.error("rwfilter errored out with code of %s for %s" % (returncode, rwfilter))
-            #TODO fix ruturn code 256 issue
-            #sys.exit(returncode)
+            logger.error("Forward rwfilter error code %s for %s" % (returncode, cmd))
+            sys.exit(returncode)
 
         get_rwuniq_info(True, a) # True = forward
 
         # Reversed criteria
+
+        unlink_file(tmprwfile)
+        unlink_file(tmprwfile)
+
+        rwf = None
         rwf = a.get_rwfilter_reversed_criteria()
+        if not isinstance(rwf, list):
+            logger.error("Problem getting reverse criteria for %s" % a)
+            sys.exit()
+        if len(rwf) < 1:
+            logger.error("Reverse criteria list is empty for %s" % a)
+            sys.exit()
 
         # add the working file locations
         rwf.append("--pass=%s" % tmprwfile)
         rwf.append("%s" % rwfile)
 
-        logger.debug("Reversed criteria check for acler: %s" % a) 
-        logger.debug("Reversed criteria rwfilter: %s" % rwf)
-
-        rwfilter = ' '.join(rwf)
-        returncode = os.system(rwfilter)
+        logger.debug("Reversed: %s" % a) 
+        cmd = ' '.join(rwf)
+        logger.debug("Reversed: %s" % cmd)
+        returncode = os.system(cmd)
         if returncode:
-            logger.error("rwfilter errored out with code of %s for %s" % (returncode, rwfilter))
-            #TODO fix ruturn code 256 issue
-            #sys.exit(returncode)
+            logger.error("Reversed rwfilter error code %s for %s" % (returncode, cmd))
+            sys.exit(returncode)
+
         get_rwuniq_info(False, a) # False = reversed
 
         if mycounter % 50 == 0:
             howlong = get_elapsed_time_since(start_time)
-            if total_recs == 0:
-                logger.info("Compared %d ACL's in %s" % (mycounter, howlong))
-            else:
-                logger.info("Compared %d ACL's to %d flow records in %s" % 
-                            (mycounter, total_recs, howlong))
+            logger.info("Compared %d ACL's both ways to %d flow records in %s" % (mycounter, total_recs, howlong))
 
-    # report overall working file comparison timing
     howlong = get_elapsed_time_since(start_time)
-    if total_recs == 0:
-        logger.info("Compared %d ACL's in %s" % (mycounter, howlong))
-    else:
-        logger.info("Compared %d ACL's to %d flow records in %s" % 
-                     (mycounter, total_recs, howlong))
+    logger.info("Compared %d ACL's both ways to %d flow records in %s" % (mycounter, total_recs, howlong))
 
 
 def get_rwuniq_info(forward, myacler):
@@ -280,13 +288,14 @@ def get_rwuniq_info(forward, myacler):
 
     # standard rwuniq criteria used on each call
     rwu = ['rwuniq','--fields=type','--values=records,bytes,packets','--no-columns','--no-final-delimiter']
+    rwu.append("%s" % tmprwfile)
 
     # if the temp rwf file has records, process them
     total_recs = get_silk_file_record_count(tmprwfile)
 
     if total_recs != 0:
-        p2 = subprocess.Popen(rwu, stdin=p1.stdout, stdout=subprocess.PIPE)
-        output = p2.communicate()[0]
+        p = subprocess.Popen(rwu, stdout=subprocess.PIPE)
+        output = p.communicate()[0]
         mylines = output.split("\n")
 
         for i in mylines:
@@ -342,7 +351,7 @@ def write_csv_out_file(namepart):
             a = [x for x in aclers if x.line == myline][0]
             # prefix is a list of the results data
             prefix = a.get_csv_out_prefix()
-            writer.writerow(prefix + v)
+            writer.writerow(prefix + v[1:])
 
 
 def build_file_names():
@@ -407,7 +416,7 @@ def main():
         total_recs = get_silk_file_record_count(rwfile)
         logger.info("SiLK working file has %d records" % total_recs)
         if total_recs >= 1:
-            process_aclers_using_rwfilter_and_rwuniq()
+            process_aclers_using_rwfilter_and_rwuniq(total_recs)
         mynamepart = "%s-00-hour" % options.start.replace('/','-')
         write_csv_out_file(mynamepart)
         unlink_working_files()
@@ -419,14 +428,18 @@ def main():
         delta = timedelta(days=1)
         
         while mystart <= myend:
-            start = mystart.isoformat().replace('-','/')
-            logger.info("Processing ACL's for %s" % start)
-            build_rwfilter_working_file(start, start)
-            total_recs = get_silk_file_record_count(rwfile)
-            logger.info("SiLK working file has %d records" % total_recs)
-            if total_recs >= 1:
-                process_aclers_using_rwfilter_and_rwuniq()
-            write_csv_out_file(start.replace('/','-'))
+            logger.info("Processing remaining ACL's against %s" % mystart.strftime("%Y-%m-%d"))
+            numentries = aclers_assess_count()
+            logger.info("Found %d assessible ACL lines" % numentries)
+            if numentries > 0:
+                build_set()
+                start = mystart.strftime("%Y/%m/%d")
+                build_rwfilter_working_file(start, start)
+                total_recs = get_silk_file_record_count(rwfile)
+                logger.info("SiLK working file has %d records" % total_recs)
+                if total_recs >= 1:
+                    process_aclers_using_rwfilter_and_rwuniq(total_recs)
+                write_csv_out_file(mystart.strftime("%Y-%m-%d"))
 
             # move to the next day
             mystart += delta
@@ -446,7 +459,6 @@ def unlink_working_files():
 
 def unlink_file(myfile):
     if os.path.exists(myfile):
-        logger.info("Deleting %s" % myfile)
         os.remove(myfile)
 
 
