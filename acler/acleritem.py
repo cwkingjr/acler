@@ -28,10 +28,6 @@ class AclerItem(object):
         self.num_days_checked = 0 # repo days checked for this traffic
         self.finished = False
 
-        # cachees
-        self.rwfilter_criteria_cache = None
-        self.rwfilter_criteria_reversed_cache = None
-
         if acl is None or acl == '':
             raise ValueError("One Cisco-formatted ACL line required")
         else:
@@ -200,9 +196,6 @@ class AclerItem(object):
         Convert the contained variable values into an rwfilter query string.
         """
 
-        if self.rwfilter_criteria_cache:
-            return self.rwfilter_criteria_cache
-
         items = list()
         items.append('rwfilter')
 
@@ -221,8 +214,6 @@ class AclerItem(object):
         if self.dport is not None:
             items.append("--dport=%s" % self.dport)
 
-        self.rwfilter_criteria_cache = items
-
         # passing back a list
         return items
 
@@ -232,9 +223,6 @@ class AclerItem(object):
         Convert the contained variable values into a reversed
         rwfilter query string.
         """
-
-        if self.rwfilter_criteria_reversed_cache:
-            return self.rwfilter_criteria_reversed_cache
 
         items = list()
         items.append('rwfilter')
@@ -253,8 +241,6 @@ class AclerItem(object):
 
         if self.dport is not None:
             items.append("--sport=%s" % self.dport)
-
-        self.rwfilter_criteria_reversed_cache = items
 
         return items
 

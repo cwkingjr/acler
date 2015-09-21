@@ -214,19 +214,13 @@ def process_aclers_using_rwfilter_and_rwuniq(total_recs):
 
         mycounter += 1
 
+        a.num_days_checked += 1
+
         # Forward criteria
 
         unlink_file(tmprwfile)
-        unlink_file(tmprwfile)
 
-        rwf = None
         rwf = a.get_rwfilter_criteria()
-        if not isinstance(rwf, list):
-            logger.error("Problem getting forward criteria for %s" % a)
-            sys.exit()
-        if len(rwf) < 1:
-            logger.error("Forward criteria list is empty for %s" % a)
-            sys.exit()
 
         # add the working file locations
         rwf.append("--pass=%s" % tmprwfile)
@@ -250,16 +244,8 @@ def process_aclers_using_rwfilter_and_rwuniq(total_recs):
         # Reversed criteria
 
         unlink_file(tmprwfile)
-        unlink_file(tmprwfile)
 
-        rwf = None
         rwf = a.get_rwfilter_reversed_criteria()
-        if not isinstance(rwf, list):
-            logger.error("Problem getting reverse criteria for %s" % a)
-            sys.exit()
-        if len(rwf) < 1:
-            logger.error("Reverse criteria list is empty for %s" % a)
-            sys.exit()
 
         # add the working file locations
         rwf.append("--pass=%s" % tmprwfile)
@@ -275,7 +261,7 @@ def process_aclers_using_rwfilter_and_rwuniq(total_recs):
 
         get_rwuniq_info(False, a) # False = reversed
 
-        if mycounter % 50 == 0:
+        if mycounter % 100 == 0:
             howlong = get_elapsed_time_since(start_time)
             logger.info("Compared %d ACL's both ways to %d flow records in %s" % (mycounter, total_recs, howlong))
 
@@ -351,6 +337,9 @@ def write_csv_out_file(namepart):
             a = [x for x in aclers if x.line == myline][0]
             # prefix is a list of the results data
             prefix = a.get_csv_out_prefix()
+            # combine prefix with original minus the orig tracking
+            # num row since it's on col one of prefix
+            # this keeps tracking num at row one for any restarts
             writer.writerow(prefix + v[1:])
 
 
@@ -417,7 +406,7 @@ def main():
         logger.info("SiLK working file has %d records" % total_recs)
         if total_recs >= 1:
             process_aclers_using_rwfilter_and_rwuniq(total_recs)
-        mynamepart = "%s-00-hour" % options.start.replace('/','-')
+        mynamepart = "%s-00HourOnly" % options.start.replace('/','-')
         write_csv_out_file(mynamepart)
         unlink_working_files()
 
