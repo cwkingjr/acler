@@ -191,7 +191,7 @@ def get_silk_file_record_count(filename):
 
 
 def increment_assessible_acls_check():
-    """Used to track days checked when rwfilter returned no records to process"""
+    """Used to track days checked"""
 
     assessible_aclers = [a for a in aclers if a.assess()]
     for a in assessible_aclers:
@@ -221,8 +221,6 @@ def process_aclers_using_rwfilter_and_rwuniq(total_recs):
     for a in assessible_aclers:
 
         mycounter += 1
-
-        a.num_checks += 1
 
         # Forward criteria
 
@@ -315,17 +313,13 @@ def get_rwuniq_info(forward, myacler):
                 myacler.add_track(mytype, 'RP', int(mypackets)) # Reverse Packets
 
 
-def write_csv_out_file(namepart):
+def write_csv_out_file(outfile):
     """
     Create a csv output file that contains that originial info but 
     includes the results of the flow checks.
     """
 
-    # get the infile name without extension
-    myname = os.path.splitext(os.path.basename(options.infile))[0] 
-    csvoutfilename = "%s-%s-%s.csv" % (myname, namepart, mytime)
-    csvoutfile = "%s/%s" % (options.outfiledir, csvoutfilename)
-    logger.info("Writing CSV out to: %s" % csvoutfile)
+    logger.info("Writing aggregate CSV out to: %s" % outfile)
 
     # load list with input csv info
     csvin = list()
@@ -335,7 +329,7 @@ def write_csv_out_file(namepart):
             csvin.append(row)
    
     # write the out file with csv in info and the results for each line
-    with open(csvoutfile, 'wb') as wf:
+    with open(outfile, 'wb') as wf:
         writer = csv.writer(wf)
 
         # iterate csvin and prefix the output with the flow results
@@ -389,6 +383,14 @@ def aclers_assess_protocols():
     return protocols
     
 
+def get_outfile(datepart):
+    # get the infile name without extension
+    myname = os.path.splitext(os.path.basename(options.infile))[0] 
+    outfilename = "%s-%s-%s.csv" % (myname, datepart, mytime)
+    outfile = "%s/%s" % (options.outfiledir, outfilename)
+    return outfile
+
+
 def main():
 
     global options, args
@@ -397,6 +399,8 @@ def main():
 
     build_file_names()
     aclfile_to_aclers(options.infile)
+
+    previous_outfile = None
 
     # make sure there's something to work on
     numentries = aclers_assess_count()
@@ -412,12 +416,14 @@ def main():
         build_rwfilter_working_file(start, start)
         total_recs = get_silk_file_record_count(rwfile)
         logger.info("SiLK working file has %d records" % total_recs)
+        increment_assessible_acls_check()
         if total_recs >= 1:
             process_aclers_using_rwfilter_and_rwuniq(total_recs)
-        else:
-            increment_assessible_acls_check()
-        mynamepart = "%s-00HourOnly" % options.start.replace('/','-')
-        write_csv_out_file(mynamepart)
+        mydays = options.start.replace('/','')
+        mydayspart = "%s-%s-00HourOnly" % (mydays, mydays)
+        outfile = get_outfile(mydayspart)
+        write_csv_out_file(outfile)
+        previous_outfile = outfile
         unlink_working_files()
 
         # now run day by day
@@ -425,22 +431,27 @@ def main():
         mystart = datetime.strptime(options.start, DATE_FORMAT)
         myend = datetime.strptime(options.end, DATE_FORMAT)
         delta = timedelta(days=1)
+        mystartday = mystart.strftime("%Y%m%d")
         
         while mystart <= myend:
-            logger.info("Processing remaining ACL's against %s" % mystart.strftime("%Y-%m-%d"))
+            logger.info("----- %s -----" % mystart.strftime("%Y-%m-%d"))
             numentries = aclers_assess_count()
-            logger.info("Found %d assessible ACL's" % numentries)
+            logger.info("Found %d remaining no-traffic ACL's" % numentries)
             if numentries > 0:
                 build_set()
                 start = mystart.strftime("%Y/%m/%d")
                 build_rwfilter_working_file(start, start)
                 total_recs = get_silk_file_record_count(rwfile)
-                logger.info("SiLK working file has %d records" % total_recs)
+                logger.info("Repo pull has %d records" % total_recs)
+                increment_assessible_acls_check()
                 if total_recs >= 1:
                     process_aclers_using_rwfilter_and_rwuniq(total_recs)
-                else:
-                    increment_assessible_acls_check()
-                write_csv_out_file(mystart.strftime("%Y-%m-%d"))
+                myendday = mystart.strftime("%Y%m%d")
+                mydayspart = "%s-%s" % (mystartday, myendday)
+                outfile = get_outfile(mydayspart)
+                write_csv_out_file(outfile)
+                unlink_file(previous_outfile)
+                previous_outfile = outfile
 
             # move to the next day
             mystart += delta
@@ -473,7 +484,7 @@ def option_and_logging_setup():
 
     parser = optparse.OptionParser(usage)
 
-    parser.add_option("-i", "--in-file", dest="infile", help="""CSV file with non-extended Cisco ACL permit entries to check traffic against. First column must include integer line numbers for manual partial completion results reassembly in case the script gets killed and you have to rerun part of the days. Use csv_add_int.py if your CSV doesn't already have these. Use the -I option to specify the column with the ACL entries. Example /path/to/acker.py -i /home/username/my-acls.csv -I 3""")
+    parser.add_option("-i", "--in-file", dest="infile", help="""CSV file with non-extended Cisco ACL permit entries to check traffic against. First column must include integer line numbers for manual partial completion results reassembly in case the script gets killed and you have to rerun part of the days. Use csv_add_int.py if your CSV doesn't already have these. Use the -I option to specify the column with the ACL entries. Example /path/to/acler.py -i /home/username/my-acls.csv -I 3""")
     parser.add_option("-I", "--in-file-column", dest="infilecolumn", help="""Use this option to provide the one-based column number that contains the ACL entry""")
     parser.add_option("-o", "--out-file-dir", dest="outfiledir", help="""Directory where the output file should go. Defaults to home dir if not provided via CLI or env ACLER_OUTFILE_DIR. Example --out-file-dir=/somewhere/acl-stuff""")
     parser.add_option("-L", "--log-file-dir", dest="logfiledir", help="""Directory where the rotating log files should go. Defaults to home dir if not provided via CLI or env ACLER_LOGFILE_DIR. Example -L /path/to/acler/logs""")

@@ -1,15 +1,294 @@
-2015-08-20 14:05:22,591 - INFO - Check the log file at /home/chuck/acler/log-acler.log for debug-level logging info
-2015-08-20 14:05:22,592 - INFO - Processing ACL file example-acls.csv as CSV file using column 3
-2015-08-20 14:05:22,593 - INFO - Found 17 assessible ACL lines in example-acls.csv
-2015-08-20 14:05:22,593 - INFO - Saving ACL SiLK set file at: /home/chuck/acler/tmp/acler-20150820T140522.set
-2015-08-20 14:05:22,594 - INFO - rwfilter command: rwfilter --start=2004/12/15 --end=2005/01/30 --anyset=/home/chuck/acler/tmp/acler-20150820T140522.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150820T140522.rwf
-2015-08-20 14:05:23,270 - INFO - rwfilter took 0s to run
-2015-08-20 14:05:23,270 - INFO - rwfilter completed successfully
-2015-08-20 14:05:23,270 - INFO - Comparing ACL criteria to SiLK working file: /home/chuck/acler/tmp/acler-20150820T140522.rwf
-2015-08-20 14:05:23,273 - INFO - SiLK working file has 9388 records
-2015-08-20 14:05:23,273 - INFO - Processing 17 assessible ACL entries via rwfilter and rwuniq
-2015-08-20 14:05:23,963 - INFO - Compared 17 ACL's to 9388 flow records in 0s
-2015-08-20 14:05:23,963 - INFO - Writing output file: /home/chuck/acler/out-acler-20150820T140522.txt
-2015-08-20 14:05:23,963 - INFO - Writing aggregated CSV out to: /home/chuck/acler/example-acls-acler-out-20150820T140522.csv
-2015-08-20 14:05:23,964 - INFO - Deleting the set file
-2015-08-20 14:05:23,964 - INFO - Deleting the rw working file
+2015-09-22 11:33:41,058 - INFO - Check the log file at /home/chuck/acler/log-acler.log for debug-level logging info
+2015-09-22 11:33:41,059 - INFO - Processing acl.csv using column 4 for ACL entries.
+2015-09-22 11:33:41,059 - INFO - Found 16 assessible ACL lines in acl.csv
+2015-09-22 11:33:41,060 - INFO - First just checking for huge, constant talkers by checking one hour
+2015-09-22 11:33:41,060 - INFO - Repo pull: rwfilter --start=2004/12/15:00 --end=2004/12/15:00 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,064 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,067 - INFO - SiLK working file has 0 records
+2015-09-22 11:33:41,067 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041215-00HourOnly-20150922T113341.csv
+2015-09-22 11:33:41,070 - INFO - ----- 2004-12-15 -----
+2015-09-22 11:33:41,070 - INFO - Found 16 remaining no-traffic ACL's
+2015-09-22 11:33:41,071 - INFO - Repo pull: rwfilter --start=2004/12/15 --end=2004/12/15 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,209 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,213 - INFO - Repo pull has 2917 records
+2015-09-22 11:33:41,213 - INFO - Processing 16 assessible ACL entries via rwfilter and rwuniq
+2015-09-22 11:33:41,580 - INFO - Compared 16 ACL's both ways to 2917 flow records in 0s
+2015-09-22 11:33:41,580 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041215-20150922T113341.csv
+2015-09-22 11:33:41,582 - INFO - ----- 2004-12-16 -----
+2015-09-22 11:33:41,582 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:41,583 - INFO - Repo pull: rwfilter --start=2004/12/16 --end=2004/12/16 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,687 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,689 - INFO - Repo pull has 8 records
+2015-09-22 11:33:41,690 - INFO - Processing 12 assessible ACL entries via rwfilter and rwuniq
+2015-09-22 11:33:41,827 - INFO - Compared 12 ACL's both ways to 8 flow records in 0s
+2015-09-22 11:33:41,828 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041216-20150922T113341.csv
+2015-09-22 11:33:41,828 - INFO - ----- 2004-12-17 -----
+2015-09-22 11:33:41,828 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:41,829 - INFO - Repo pull: rwfilter --start=2004/12/17 --end=2004/12/17 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,864 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,866 - INFO - Repo pull has 0 records
+2015-09-22 11:33:41,867 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041217-20150922T113341.csv
+2015-09-22 11:33:41,867 - INFO - ----- 2004-12-18 -----
+2015-09-22 11:33:41,867 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:41,868 - INFO - Repo pull: rwfilter --start=2004/12/18 --end=2004/12/18 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,876 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,878 - INFO - Repo pull has 0 records
+2015-09-22 11:33:41,878 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041218-20150922T113341.csv
+2015-09-22 11:33:41,879 - INFO - ----- 2004-12-19 -----
+2015-09-22 11:33:41,879 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:41,879 - INFO - Repo pull: rwfilter --start=2004/12/19 --end=2004/12/19 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,887 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,889 - INFO - Repo pull has 0 records
+2015-09-22 11:33:41,889 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041219-20150922T113341.csv
+2015-09-22 11:33:41,890 - INFO - ----- 2004-12-20 -----
+2015-09-22 11:33:41,890 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:41,891 - INFO - Repo pull: rwfilter --start=2004/12/20 --end=2004/12/20 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,899 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,901 - INFO - Repo pull has 0 records
+2015-09-22 11:33:41,901 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041220-20150922T113341.csv
+2015-09-22 11:33:41,902 - INFO - ----- 2004-12-21 -----
+2015-09-22 11:33:41,902 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:41,902 - INFO - Repo pull: rwfilter --start=2004/12/21 --end=2004/12/21 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,909 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,912 - INFO - Repo pull has 0 records
+2015-09-22 11:33:41,912 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041221-20150922T113341.csv
+2015-09-22 11:33:41,912 - INFO - ----- 2004-12-22 -----
+2015-09-22 11:33:41,912 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:41,913 - INFO - Repo pull: rwfilter --start=2004/12/22 --end=2004/12/22 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,921 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,923 - INFO - Repo pull has 0 records
+2015-09-22 11:33:41,923 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041222-20150922T113341.csv
+2015-09-22 11:33:41,924 - INFO - ----- 2004-12-23 -----
+2015-09-22 11:33:41,924 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:41,925 - INFO - Repo pull: rwfilter --start=2004/12/23 --end=2004/12/23 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,933 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,935 - INFO - Repo pull has 0 records
+2015-09-22 11:33:41,935 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041223-20150922T113341.csv
+2015-09-22 11:33:41,936 - INFO - ----- 2004-12-24 -----
+2015-09-22 11:33:41,936 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:41,937 - INFO - Repo pull: rwfilter --start=2004/12/24 --end=2004/12/24 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,944 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,947 - INFO - Repo pull has 0 records
+2015-09-22 11:33:41,947 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041224-20150922T113341.csv
+2015-09-22 11:33:41,948 - INFO - ----- 2004-12-25 -----
+2015-09-22 11:33:41,948 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:41,949 - INFO - Repo pull: rwfilter --start=2004/12/25 --end=2004/12/25 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,956 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,958 - INFO - Repo pull has 0 records
+2015-09-22 11:33:41,958 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041225-20150922T113341.csv
+2015-09-22 11:33:41,959 - INFO - ----- 2004-12-26 -----
+2015-09-22 11:33:41,960 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:41,960 - INFO - Repo pull: rwfilter --start=2004/12/26 --end=2004/12/26 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,968 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,970 - INFO - Repo pull has 0 records
+2015-09-22 11:33:41,970 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041226-20150922T113341.csv
+2015-09-22 11:33:41,971 - INFO - ----- 2004-12-27 -----
+2015-09-22 11:33:41,971 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:41,971 - INFO - Repo pull: rwfilter --start=2004/12/27 --end=2004/12/27 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,979 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,982 - INFO - Repo pull has 0 records
+2015-09-22 11:33:41,983 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041227-20150922T113341.csv
+2015-09-22 11:33:41,984 - INFO - ----- 2004-12-28 -----
+2015-09-22 11:33:41,984 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:41,986 - INFO - Repo pull: rwfilter --start=2004/12/28 --end=2004/12/28 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:41,993 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:41,997 - INFO - Repo pull has 0 records
+2015-09-22 11:33:41,998 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041228-20150922T113341.csv
+2015-09-22 11:33:41,998 - INFO - ----- 2004-12-29 -----
+2015-09-22 11:33:41,999 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,000 - INFO - Repo pull: rwfilter --start=2004/12/29 --end=2004/12/29 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,008 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,010 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,010 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041229-20150922T113341.csv
+2015-09-22 11:33:42,011 - INFO - ----- 2004-12-30 -----
+2015-09-22 11:33:42,011 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,012 - INFO - Repo pull: rwfilter --start=2004/12/30 --end=2004/12/30 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,019 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,021 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,022 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041230-20150922T113341.csv
+2015-09-22 11:33:42,022 - INFO - ----- 2004-12-31 -----
+2015-09-22 11:33:42,022 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,023 - INFO - Repo pull: rwfilter --start=2004/12/31 --end=2004/12/31 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,031 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,034 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,034 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20041231-20150922T113341.csv
+2015-09-22 11:33:42,036 - INFO - ----- 2005-01-01 -----
+2015-09-22 11:33:42,037 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,038 - INFO - Repo pull: rwfilter --start=2005/01/01 --end=2005/01/01 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,048 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,050 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,050 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050101-20150922T113341.csv
+2015-09-22 11:33:42,051 - INFO - ----- 2005-01-02 -----
+2015-09-22 11:33:42,051 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,052 - INFO - Repo pull: rwfilter --start=2005/01/02 --end=2005/01/02 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,059 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,061 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,061 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050102-20150922T113341.csv
+2015-09-22 11:33:42,062 - INFO - ----- 2005-01-03 -----
+2015-09-22 11:33:42,062 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,063 - INFO - Repo pull: rwfilter --start=2005/01/03 --end=2005/01/03 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,070 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,072 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,072 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050103-20150922T113341.csv
+2015-09-22 11:33:42,073 - INFO - ----- 2005-01-04 -----
+2015-09-22 11:33:42,073 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,074 - INFO - Repo pull: rwfilter --start=2005/01/04 --end=2005/01/04 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,082 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,084 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,085 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050104-20150922T113341.csv
+2015-09-22 11:33:42,085 - INFO - ----- 2005-01-05 -----
+2015-09-22 11:33:42,085 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,086 - INFO - Repo pull: rwfilter --start=2005/01/05 --end=2005/01/05 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,093 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,096 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,096 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050105-20150922T113341.csv
+2015-09-22 11:33:42,098 - INFO - ----- 2005-01-06 -----
+2015-09-22 11:33:42,098 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,099 - INFO - Repo pull: rwfilter --start=2005/01/06 --end=2005/01/06 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,197 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,200 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,200 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050106-20150922T113341.csv
+2015-09-22 11:33:42,201 - INFO - ----- 2005-01-07 -----
+2015-09-22 11:33:42,202 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,203 - INFO - Repo pull: rwfilter --start=2005/01/07 --end=2005/01/07 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,345 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,348 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,349 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050107-20150922T113341.csv
+2015-09-22 11:33:42,350 - INFO - ----- 2005-01-08 -----
+2015-09-22 11:33:42,350 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,352 - INFO - Repo pull: rwfilter --start=2005/01/08 --end=2005/01/08 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,369 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,371 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,372 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050108-20150922T113341.csv
+2015-09-22 11:33:42,373 - INFO - ----- 2005-01-09 -----
+2015-09-22 11:33:42,373 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,374 - INFO - Repo pull: rwfilter --start=2005/01/09 --end=2005/01/09 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,382 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,384 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,384 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050109-20150922T113341.csv
+2015-09-22 11:33:42,385 - INFO - ----- 2005-01-10 -----
+2015-09-22 11:33:42,385 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,386 - INFO - Repo pull: rwfilter --start=2005/01/10 --end=2005/01/10 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,393 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,395 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,396 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050110-20150922T113341.csv
+2015-09-22 11:33:42,396 - INFO - ----- 2005-01-11 -----
+2015-09-22 11:33:42,396 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,397 - INFO - Repo pull: rwfilter --start=2005/01/11 --end=2005/01/11 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,405 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,408 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,408 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050111-20150922T113341.csv
+2015-09-22 11:33:42,408 - INFO - ----- 2005-01-12 -----
+2015-09-22 11:33:42,409 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,409 - INFO - Repo pull: rwfilter --start=2005/01/12 --end=2005/01/12 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,417 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,419 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,419 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050112-20150922T113341.csv
+2015-09-22 11:33:42,420 - INFO - ----- 2005-01-13 -----
+2015-09-22 11:33:42,420 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,420 - INFO - Repo pull: rwfilter --start=2005/01/13 --end=2005/01/13 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,429 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,431 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,431 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050113-20150922T113341.csv
+2015-09-22 11:33:42,432 - INFO - ----- 2005-01-14 -----
+2015-09-22 11:33:42,432 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,432 - INFO - Repo pull: rwfilter --start=2005/01/14 --end=2005/01/14 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,440 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,442 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,443 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050114-20150922T113341.csv
+2015-09-22 11:33:42,443 - INFO - ----- 2005-01-15 -----
+2015-09-22 11:33:42,444 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,444 - INFO - Repo pull: rwfilter --start=2005/01/15 --end=2005/01/15 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,452 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,454 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,454 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050115-20150922T113341.csv
+2015-09-22 11:33:42,455 - INFO - ----- 2005-01-16 -----
+2015-09-22 11:33:42,455 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,456 - INFO - Repo pull: rwfilter --start=2005/01/16 --end=2005/01/16 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,464 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,467 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,467 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050116-20150922T113341.csv
+2015-09-22 11:33:42,468 - INFO - ----- 2005-01-17 -----
+2015-09-22 11:33:42,468 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,468 - INFO - Repo pull: rwfilter --start=2005/01/17 --end=2005/01/17 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,477 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,480 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,480 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050117-20150922T113341.csv
+2015-09-22 11:33:42,481 - INFO - ----- 2005-01-18 -----
+2015-09-22 11:33:42,481 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,483 - INFO - Repo pull: rwfilter --start=2005/01/18 --end=2005/01/18 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,491 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,493 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,494 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050118-20150922T113341.csv
+2015-09-22 11:33:42,494 - INFO - ----- 2005-01-19 -----
+2015-09-22 11:33:42,494 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,496 - INFO - Repo pull: rwfilter --start=2005/01/19 --end=2005/01/19 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,503 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,506 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,506 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050119-20150922T113341.csv
+2015-09-22 11:33:42,506 - INFO - ----- 2005-01-20 -----
+2015-09-22 11:33:42,507 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,507 - INFO - Repo pull: rwfilter --start=2005/01/20 --end=2005/01/20 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,514 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,517 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,517 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050120-20150922T113341.csv
+2015-09-22 11:33:42,518 - INFO - ----- 2005-01-21 -----
+2015-09-22 11:33:42,518 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,518 - INFO - Repo pull: rwfilter --start=2005/01/21 --end=2005/01/21 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,528 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,531 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,531 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050121-20150922T113341.csv
+2015-09-22 11:33:42,532 - INFO - ----- 2005-01-22 -----
+2015-09-22 11:33:42,532 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,533 - INFO - Repo pull: rwfilter --start=2005/01/22 --end=2005/01/22 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,540 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,543 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,543 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050122-20150922T113341.csv
+2015-09-22 11:33:42,543 - INFO - ----- 2005-01-23 -----
+2015-09-22 11:33:42,544 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,544 - INFO - Repo pull: rwfilter --start=2005/01/23 --end=2005/01/23 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,552 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,554 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,554 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050123-20150922T113341.csv
+2015-09-22 11:33:42,554 - INFO - ----- 2005-01-24 -----
+2015-09-22 11:33:42,555 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,555 - INFO - Repo pull: rwfilter --start=2005/01/24 --end=2005/01/24 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,563 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,565 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,565 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050124-20150922T113341.csv
+2015-09-22 11:33:42,566 - INFO - ----- 2005-01-25 -----
+2015-09-22 11:33:42,566 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,567 - INFO - Repo pull: rwfilter --start=2005/01/25 --end=2005/01/25 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,575 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,577 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,577 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050125-20150922T113341.csv
+2015-09-22 11:33:42,578 - INFO - ----- 2005-01-26 -----
+2015-09-22 11:33:42,578 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,579 - INFO - Repo pull: rwfilter --start=2005/01/26 --end=2005/01/26 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,586 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,588 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,589 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050126-20150922T113341.csv
+2015-09-22 11:33:42,589 - INFO - ----- 2005-01-27 -----
+2015-09-22 11:33:42,589 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,590 - INFO - Repo pull: rwfilter --start=2005/01/27 --end=2005/01/27 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,597 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,600 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,600 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050127-20150922T113341.csv
+2015-09-22 11:33:42,600 - INFO - ----- 2005-01-28 -----
+2015-09-22 11:33:42,600 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,601 - INFO - Repo pull: rwfilter --start=2005/01/28 --end=2005/01/28 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,609 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,611 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,611 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050128-20150922T113341.csv
+2015-09-22 11:33:42,612 - INFO - ----- 2005-01-29 -----
+2015-09-22 11:33:42,612 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,613 - INFO - Repo pull: rwfilter --start=2005/01/29 --end=2005/01/29 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,620 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,622 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,622 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050129-20150922T113341.csv
+2015-09-22 11:33:42,623 - INFO - ----- 2005-01-30 -----
+2015-09-22 11:33:42,623 - INFO - Found 12 remaining no-traffic ACL's
+2015-09-22 11:33:42,623 - INFO - Repo pull: rwfilter --start=2005/01/30 --end=2005/01/30 --anyset=/home/chuck/acler/tmp/acler-20150922T113341.set --proto=6,17,50,51     --class=all --type=in,inweb,out,outweb --pass=/home/chuck/acler/tmp/acler-20150922T113341.rwf
+2015-09-22 11:33:42,631 - INFO - Repo pull rwfilter took 0s to run
+2015-09-22 11:33:42,633 - INFO - Repo pull has 0 records
+2015-09-22 11:33:42,633 - INFO - Writing aggregate CSV out to: /home/chuck/acler/acl-20041215-20050130-20150922T113341.csv

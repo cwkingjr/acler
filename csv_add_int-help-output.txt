@@ -1,0 +1,9 @@
+Usage: ./csv_add_int.py [options]
+use -h for help / option descriptions 
+example: ./csv_add_int.py -i /path/to/my/no-integer-csv-file.csv
+
+
+Options:
+  -h, --help            show this help message and exit
+  -i INFILE, --in-file=INFILE
+                        CSV file to prepend tracking line number integers to.
