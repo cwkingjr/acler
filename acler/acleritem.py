@@ -25,7 +25,10 @@ class AclerItem(object):
         self.error = None
         self.track = dict() # track counts
         self.assessible = False
-        self.num_days_checked = 0 # repo days checked for this traffic
+        # repo days checked for this traffic
+        # 1 = one hour
+        # 2- equal number of days + 1
+        self.num_checks = 0
         self.finished = False
 
         if acl is None or acl == '':
@@ -140,47 +143,38 @@ class AclerItem(object):
 
         return s
 
-
     def dump(self):
-
         return "<AclerItem: line %s, acl %s, parsed %s, error %s, assess %s, " \
             "protocol %d, sip %s, sport %s, dip %s, dport %s,%s>" % \
             (self.line, self.acl, self.parsed, self.error, self.assess, \
             self.protocol, self.sip, self.sport, self.dip, self.dport, \
             self.format_track())
 
-    def dump_traffic(self):
-        """Dump record in format needed for has traffic output file entry"""
-
-        return "%s|Traffic %s|%s|%s\n" % \
-            (self.line, self.get_types_with_records(), self.acl, self.format_track())
-
-    def dump_no_traffic(self):
-        """Dump record in format needed for has no traffic output file entry"""
-
-        return "%s|No Traffic|%s\n" % (self.line, self.acl)
-
-    def dump_no_assess(self):
-        """Dump record in format needed for not assessed output file entry"""
-
-        return "%s|Not Assessed|%s|error %s\n" % (self.line, self.acl, self.error)
+    def get_days_checked(self):
+        if self.num_checks == 0:
+            return ''
+        elif self.num_checks == 1:
+            return '1H'
+        else:
+            return "%dD" % (self.num_checks - 1)
 
     def get_csv_out_prefix(self):
         """Dump record info as a list to add to/prefix the CSV infile data"""
 
         ret = list()
+        checks = self.get_days_checked()
 
         if self.has_records():                                                                                                                    
             # traffic
             ret.append(self.line)
-            ret.append("Traffic|%s|%s" % (self.get_types_with_records(), self.format_track()))
+            ret.append("Traffic %s|%s|%s" % (checks, self.get_types_with_records(), self.format_track()))
             return ret
-        elif self.assess and not self.has_records():
+        elif self.assessible and not self.has_records():
             # no traffic
             ret.append(self.line)
-            ret.append("No Traffic||")
+            ret.append("No Traffic %s||" % checks)
             return ret
-        elif not self.assess:
+        elif not self.assessible:
             # not assessed
             ret.append(self.line)
             ret.append("Not Assessed||Error %s" % self.error)

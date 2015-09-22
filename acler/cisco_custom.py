@@ -160,7 +160,7 @@ def parse_cisco(cisco_acl_line):
         return myacler
 
     if '/' in cisco_acl_line.lower():
-        myacler.error = 'Format issue, forward slash seen'
+        myacler.error = 'Format issue - forward slash seen'
         return myacler
 
     try:

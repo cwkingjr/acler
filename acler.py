@@ -142,7 +142,7 @@ def build_rwfilter_working_file(start, end):
     --class=%s --type=%s --pass=%s" % (start, end, setfile, \
     protocols, options.silkclass, options.silktypes, rwfile)
 
-    logger.info("repo pull rwfilter command: %s" % cmd)
+    logger.info("Repo pull: %s" % cmd)
 
     returncode = os.system(cmd)
 
@@ -190,6 +190,14 @@ def get_silk_file_record_count(filename):
             sys.exit(1)
 
 
+def increment_assessible_acls_check():
+    """Used to track days checked when rwfilter returned no records to process"""
+
+    assessible_aclers = [a for a in aclers if a.assess()]
+    for a in assessible_aclers:
+        a.num_checks += 1
+
+
 def process_aclers_using_rwfilter_and_rwuniq(total_recs):
     """
     For each assessible ACL, pull a temp rwf file from the repo pull file
@@ -214,7 +222,7 @@ def process_aclers_using_rwfilter_and_rwuniq(total_recs):
 
         mycounter += 1
 
-        a.num_days_checked += 1
+        a.num_checks += 1
 
         # Forward criteria
 
@@ -406,6 +414,8 @@ def main():
         logger.info("SiLK working file has %d records" % total_recs)
         if total_recs >= 1:
             process_aclers_using_rwfilter_and_rwuniq(total_recs)
+        else:
+            increment_assessible_acls_check()
         mynamepart = "%s-00HourOnly" % options.start.replace('/','-')
         write_csv_out_file(mynamepart)
         unlink_working_files()
@@ -419,7 +429,7 @@ def main():
         while mystart <= myend:
             logger.info("Processing remaining ACL's against %s" % mystart.strftime("%Y-%m-%d"))
             numentries = aclers_assess_count()
-            logger.info("Found %d assessible ACL lines" % numentries)
+            logger.info("Found %d assessible ACL's" % numentries)
             if numentries > 0:
                 build_set()
                 start = mystart.strftime("%Y/%m/%d")
@@ -428,6 +438,8 @@ def main():
                 logger.info("SiLK working file has %d records" % total_recs)
                 if total_recs >= 1:
                     process_aclers_using_rwfilter_and_rwuniq(total_recs)
+                else:
+                    increment_assessible_acls_check()
                 write_csv_out_file(mystart.strftime("%Y-%m-%d"))
 
             # move to the next day
